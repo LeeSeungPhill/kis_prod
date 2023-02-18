@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-szgq*n&)6jdq%rissm6@8hy#m3w$a=&fu-@k)h)8l0vln(o1=^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -86,7 +86,7 @@ WSGI_APPLICATION = 'kis.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-                'NAME': 'my_develop',
+                'NAME': 'fund_risk_mng',
                 'USER': 'postgres',
                 'PASSWORD': 'sktl2389!1',
                 'HOST': 'localhost',
@@ -129,14 +129,13 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = (
     'http://localhost:8080', # vue의 포트 번호
     'http://127.0.0.1:8080',
