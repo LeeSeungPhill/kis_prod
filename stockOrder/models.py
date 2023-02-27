@@ -22,3 +22,19 @@ class stock_order(models.Model):
     remain_qty = models.IntegerField(null=True, blank=True)                 # 잔여수량
     create_date = models.DateTimeField(auto_now_add=True)                   # 생성일시
     proc_date = models.DateTimeField(auto_now=True)                         # 처리일시
+
+class sub_total(models.Model):
+    id = models.AutoField(primary_key=True)
+    tr_day = models.CharField(max_length=8)
+    tr_time = models.CharField(max_length=4)
+    tr_subject = models.CharField(max_length=20)
+    market_type = models.CharField(max_length=20)
+    tr_type = models.CharField(max_length=20)
+    code = models.CharField(max_length=6)
+    name = models.CharField(max_length=30)
+    tr_order = models.IntegerField()
+    volumn = models.BigIntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'sub_total'

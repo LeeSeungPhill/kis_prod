@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from .models import stock_order
+from .models import stock_order, sub_total
 from stockBalance.models import stock_balance
 from stockFundMng.models import stock_fund_mng
 from stockMarketMng.models import stock_market_mng
@@ -153,6 +153,35 @@ def detail(request, company):
     link = "stockOrder/"+company+".html"
 
     return render(request, link)
+
+def subTotal(request):
+    tr_subject = request.GET.get('tr_subject', '')
+    tr_type = request.GET.get('tr_type', '')
+    market_type = request.GET.get('market_type', '')
+
+    subTotal_info = sub_total.objects.filter(tr_subject=tr_subject, tr_type=tr_type, market_type=market_type).order_by('tr_order')
+
+    subTotal_info_rtn_list = []
+    if len(subTotal_info) > 0:
+
+        for i, rtn in enumerate(subTotal_info, start=1):
+
+            subTotal_info_rtn_list.append(
+                {'tr_day': rtn.tr_day, 'tr_time': rtn.tr_time, 'code': rtn.code, 'name': rtn.name, 'tr_subject': rtn.tr_subject,
+                 'tr_type': rtn.tr_type, 'market_type': rtn.market_type, 'tr_order': rtn.tr_order, 'volumn': format(rtn.volumn, ',d')})
+
+    return JsonResponse(subTotal_info_rtn_list, safe=False)
+
+def chart(request):
+    code = request.GET.get('code', '')
+    company = request.GET.get('company', '')
+
+    get_chart(code, company)
+
+    stock_info_rtn_list = []
+    stock_info_rtn_list.append({'code': code, 'name': company})
+
+    return JsonResponse(stock_info_rtn_list, safe=False)
 
 def send(request):
     acct_no = request.GET.get('acct_no', '')
