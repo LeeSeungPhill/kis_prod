@@ -127,7 +127,16 @@ def get_chart(code, company):
     df = web.naver.NaverDailyReader(code, start=start, end=end).read()
     #print(df)
     df = df.astype(int)  # Object 데이터를 int로 변환
-
+    OBV = []
+    OBV.append(0)
+    for i in range(1, len(df.Close)):
+        if df.Close[i] > df.Close[i - 1]:
+            OBV.append(OBV[-1] + df['Volume'][i])
+        elif df.Close[i] < df.Close[i - 1]:
+            OBV.append(OBV[-1] - df['Volume'][i])
+        else:
+            OBV.append(OBV[-1])
+    df['OBV'] = OBV
     # 캔들 차트 객체 생성
     df = df.reset_index()
     df['Date'] = df['Date'].apply(lambda x: datetime.strftime(x, '%Y-%m-%d'))  # Datetime to str
@@ -141,6 +150,7 @@ def get_chart(code, company):
     fig.add_trace(data1, row=1, col=1)
     fig.add_trace(data2, row=2, col=1)
     fig.add_trace(go.Scatter(x=df['Date'], y=df['ma10'], line=dict(color="#414b73"), name='MA10'), row=2, col=1)
+    fig.add_trace(go.Scatter(x=df['Date'], y=df['OBV'], line=dict(color="black"), name='OBV'), row=2, col=1)
     fig.update_layout(xaxis1=dict(type="category", categoryorder='category ascending'),
                       xaxis2=dict(type="category", categoryorder='category ascending'), title=company+"["+code+"]",
                       yaxis1_title='Stock Price', yaxis2_title='Volume', xaxis2_title='periods',
@@ -216,7 +226,11 @@ def send(request):
                             print("매수량 : " + str(round(n_buy_amount)))
                             print("매수금액 : " + str(n_buy_sum))
                         else:   # 자산번호 <> 0 인 경우, 종목손실금액, 매수량 설정
-                            market_mng_info = stock_market_mng.objects.filter(acct_no=acct_no,asset_risk_num=i.asset_risk_num).first()
+                            # 자산 리스크 현행화
+                            asset_risk_change(acct_no, app_key, app_secret, access_token, i.asset_risk_num)
+                            market_mng_info = stock_market_mng.objects.filter(acct_no=acct_no,
+                                                                              asset_risk_num=i.asset_risk_num,
+                                                                              aply_end_dt='99991231').first()
                             # 종목손실금액
                             n_item_loss_sum = market_mng_info.risk_sum / market_mng_info.item_number
                             # 매수량
@@ -531,6 +545,126 @@ def cancel(request):
                          'proc_date': "", 'stock_asset_num': asset_info.asset_num, 'stock_asset_risk_num': asset_risk_info.asset_risk_num})
 
         return JsonResponse(stock_order_rtn_list, safe=False)
+    except Exception as e:
+        print('잘못된 인덱스입니다.', e)
+
+def asset_risk_change(acct_no, app_key, app_secret, access_token, asset_risk_num):
+    asset_risk_info = stock_market_mng.objects.filter(acct_no=acct_no, asset_risk_num=asset_risk_num, aply_end_dt='99991231').first()
+
+    try:
+        # 잔고조회
+        headers = {"Content-Type": "application/json",
+                   "authorization": f"Bearer {access_token}",
+                   "appKey": app_key,
+                   "appSecret": app_secret,
+                   "tr_id": "TTTC8434R"}  # tr_id : TTTC8434R[실전투자], VTTC8434R[모의투자]
+        params = {
+            "CANO": acct_no,
+            'ACNT_PRDT_CD': '01',
+            'AFHR_FLPR_YN': 'N',
+            'FNCG_AMT_AUTO_RDPT_YN': 'N',
+            'FUND_STTL_ICLD_YN': 'N',
+            'INQR_DVSN': '01',
+            'OFL_YN': 'N',
+            'PRCS_DVSN': '01',
+            'UNPR_DVSN': '01',
+            'CTX_AREA_FK100': '',
+            'CTX_AREA_NK100': ''
+        }
+        PATH = "uapi/domestic-stock/v1/trading/inquire-balance"
+        URL = f"{URL_BASE}/{PATH}"
+        res = requests.get(URL, headers=headers, params=params, verify=False)
+        ar = resp.APIResp(res)
+        output2 = ar.getBody().output2
+
+        if ar.isOK() and output2:
+            f = pd.DataFrame(output2)
+            for i, name in enumerate(f.index):
+                u_prvs_rcdl_excc_amt = int(f['prvs_rcdl_excc_amt'][i])  # 가수도 정산 금액
+            print("가수도 정산 금액 : " + format(int(u_prvs_rcdl_excc_amt), ',d'))
+            if asset_risk_info.market_level_num == "1":  # 하락 지속 후, 기술적 반등
+                n_asset_sum = u_prvs_rcdl_excc_amt * 30 * 0.01
+                if n_asset_sum < 10000000:
+                    n_asset_sum = 10000000
+                    n_risk_rate = 2
+                    n_stock_num = 2
+                elif n_asset_sum > 30000000:
+                    n_asset_sum = 30000000
+                    n_risk_rate = 2
+                    n_stock_num = 4
+                else:
+                    n_risk_rate = 1.8
+                    n_stock_num = 3
+            elif asset_risk_info.market_level_num == "2":  # 단기 추세 전환 후, 기술적 반등
+                n_asset_sum = u_prvs_rcdl_excc_amt * 30 * 0.01
+                if n_asset_sum < 20000000:
+                    n_asset_sum = 20000000
+                    n_risk_rate = 3
+                    n_stock_num = 4
+                elif n_asset_sum > 30000000:
+                    n_asset_sum = 30000000
+                    n_risk_rate = 4
+                    n_stock_num = 6
+                else:
+                    n_risk_rate = 3.5
+                    n_stock_num = 5
+            elif asset_risk_info.market_level_num == "3":  # 패턴내에서 기술적 반등
+                n_asset_sum = u_prvs_rcdl_excc_amt * 50 * 0.01
+                if n_asset_sum < 30000000:
+                    n_asset_sum = 30000000
+                    n_risk_rate = 4
+                    n_stock_num = 6
+                elif n_asset_sum > 50000000:
+                    n_asset_sum = 50000000
+                    n_risk_rate = 4
+                    n_stock_num = 8
+                else:
+                    n_risk_rate = 2.8
+                    n_stock_num = 5
+            elif asset_risk_info.market_level_num == "4":  # 일봉상 추세 전환 후, 눌림구간에서 반등
+                n_asset_sum = u_prvs_rcdl_excc_amt * 70 * 0.01
+                if n_asset_sum < 30000000:
+                    n_asset_sum = 30000000
+                    n_risk_rate = 5.5
+                    n_stock_num = 8
+                elif n_asset_sum > 70000000:
+                    n_asset_sum = 70000000
+                    n_risk_rate = 3.5
+                    n_stock_num = 10
+                else:
+                    n_risk_rate = 5
+                    n_stock_num = 10
+            elif asset_risk_info.market_level_num == "5":  # 상승 지속 후, 패턴내에서 기술적 반등
+                n_asset_sum = u_prvs_rcdl_excc_amt * 50 * 0.01
+                if n_asset_sum < 30000000:
+                    n_asset_sum = 30000000
+                    n_risk_rate = 4
+                    n_stock_num = 6
+                elif n_asset_sum > 50000000:
+                    n_asset_sum = 50000000
+                    n_risk_rate = 4
+                    n_stock_num = 8
+                else:
+                    n_risk_rate = 2.8
+                    n_stock_num = 5
+            else:
+                n_asset_sum = u_prvs_rcdl_excc_amt * 30 * 0.01
+                if n_asset_sum < 10000000:
+                    n_asset_sum = 10000000
+                    n_risk_rate = 2
+                    n_stock_num = 2
+                elif n_asset_sum > 30000000:
+                    n_asset_sum = 30000000
+                    n_risk_rate = 2
+                    n_stock_num = 4
+                else:
+                    n_risk_rate = 1.8
+                    n_stock_num = 3
+
+            n_risk_sum = n_asset_sum * n_risk_rate * 0.01
+            print("리스크 금액 : " + format(int(n_risk_sum), ',d'))
+
+            stock_market_mng.objects.filter(acct_no=acct_no, asset_risk_num=asset_risk_num, aply_end_dt='99991231').update(total_asset=n_asset_sum, risk_rate=n_risk_rate, risk_sum=n_risk_sum, item_number=n_stock_num)
     except Exception as e:
         print('잘못된 인덱스입니다.', e)
 

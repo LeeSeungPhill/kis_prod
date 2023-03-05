@@ -152,6 +152,124 @@ def list(request):
                 )
         except Exception as e:
             print('잘못된 인덱스입니다.', e)
+    elif stock_market_mng.objects.filter(acct_no=acct_no, aply_end_dt='99991231').count() > 0:
+        asset_risk_info = stock_market_mng.objects.filter(acct_no=acct_no, aply_end_dt='99991231').first()
+        try:
+            # 잔고조회
+            headers = {"Content-Type": "application/json",
+                       "authorization": f"Bearer {access_token}",
+                       "appKey": app_key,
+                       "appSecret": app_secret,
+                       "tr_id": "TTTC8434R"}    # tr_id : TTTC8434R[실전투자], VTTC8434R[모의투자]
+            params = {
+                "CANO": acct_no,
+                'ACNT_PRDT_CD': '01',
+                'AFHR_FLPR_YN': 'N',
+                'FNCG_AMT_AUTO_RDPT_YN': 'N',
+                'FUND_STTL_ICLD_YN': 'N',
+                'INQR_DVSN': '01',
+                'OFL_YN': 'N',
+                'PRCS_DVSN': '01',
+                'UNPR_DVSN': '01',
+                'CTX_AREA_FK100': '',
+                'CTX_AREA_NK100': ''
+            }
+            PATH = "uapi/domestic-stock/v1/trading/inquire-balance"
+            URL = f"{URL_BASE}/{PATH}"
+            res = requests.get(URL, headers=headers, params=params, verify=False)
+            ar = resp.APIResp(res)
+            output2 = ar.getBody().output2
+
+            if ar.isOK() and output2:
+                f = pd.DataFrame(output2)
+                for i, name in enumerate(f.index):
+                    u_prvs_rcdl_excc_amt = int(f['prvs_rcdl_excc_amt'][i])      # 가수도 정산 금액
+                print("가수도 정산 금액 : " + format(int(u_prvs_rcdl_excc_amt), ',d'))
+                if asset_risk_info.market_level_num == "1":   # 하락 지속 후, 기술적 반등
+                    n_asset_sum = u_prvs_rcdl_excc_amt * 30 * 0.01
+                    if n_asset_sum < 10000000:
+                        n_asset_sum = 10000000
+                        n_risk_rate = 2
+                        n_stock_num = 2
+                    elif n_asset_sum > 30000000:
+                        n_asset_sum = 30000000
+                        n_risk_rate = 2
+                        n_stock_num = 4
+                    else:
+                        n_risk_rate = 1.8
+                        n_stock_num = 3
+                elif asset_risk_info.market_level_num == "2": # 단기 추세 전환 후, 기술적 반등
+                    n_asset_sum = u_prvs_rcdl_excc_amt * 30 * 0.01
+                    if n_asset_sum < 20000000:
+                        n_asset_sum = 20000000
+                        n_risk_rate = 3
+                        n_stock_num = 4
+                    elif n_asset_sum > 30000000:
+                        n_asset_sum = 30000000
+                        n_risk_rate = 4
+                        n_stock_num = 6
+                    else:
+                        n_risk_rate = 3.5
+                        n_stock_num = 5
+                elif asset_risk_info.market_level_num == "3": # 패턴내에서 기술적 반등
+                    n_asset_sum = u_prvs_rcdl_excc_amt * 50 * 0.01
+                    if n_asset_sum < 30000000:
+                        n_asset_sum = 30000000
+                        n_risk_rate = 4
+                        n_stock_num = 6
+                    elif n_asset_sum > 50000000:
+                        n_asset_sum = 50000000
+                        n_risk_rate = 4
+                        n_stock_num = 8
+                    else:
+                        n_risk_rate = 2.8
+                        n_stock_num = 5
+                elif asset_risk_info.market_level_num == "4": # 일봉상 추세 전환 후, 눌림구간에서 반등
+                    n_asset_sum = u_prvs_rcdl_excc_amt * 70 * 0.01
+                    if n_asset_sum < 30000000:
+                        n_asset_sum = 30000000
+                        n_risk_rate = 5.5
+                        n_stock_num = 8
+                    elif n_asset_sum > 70000000:
+                        n_asset_sum = 70000000
+                        n_risk_rate = 3.5
+                        n_stock_num = 10
+                    else:
+                        n_risk_rate = 5
+                        n_stock_num = 10
+                elif asset_risk_info.market_level_num == "5": # 상승 지속 후, 패턴내에서 기술적 반등
+                    n_asset_sum = u_prvs_rcdl_excc_amt * 50 * 0.01
+                    if n_asset_sum < 30000000:
+                        n_asset_sum = 30000000
+                        n_risk_rate = 4
+                        n_stock_num = 6
+                    elif n_asset_sum > 50000000:
+                        n_asset_sum = 50000000
+                        n_risk_rate = 4
+                        n_stock_num = 8
+                    else:
+                        n_risk_rate = 2.8
+                        n_stock_num = 5
+                else:
+                    n_asset_sum = u_prvs_rcdl_excc_amt * 30 * 0.01
+                    if n_asset_sum < 10000000:
+                        n_asset_sum = 10000000
+                        n_risk_rate = 2
+                        n_stock_num = 2
+                    elif n_asset_sum > 30000000:
+                        n_asset_sum = 30000000
+                        n_risk_rate = 2
+                        n_stock_num = 4
+                    else:
+                        n_risk_rate = 1.8
+                        n_stock_num = 3
+
+                n_risk_sum = n_asset_sum * n_risk_rate * 0.01
+                print("리스크 금액 : " + format(int(n_risk_sum), ',d'))
+
+                stock_market_mng.objects.filter(acct_no=acct_no, asset_risk_num=asset_risk_info.asset_risk_num, aply_end_dt='99991231').update(total_asset=n_asset_sum, risk_rate=n_risk_rate, risk_sum=n_risk_sum, item_number=n_stock_num)
+        except Exception as e:
+            print('잘못된 인덱스입니다.', e)
 
     if stock_market_mng.objects.filter(acct_no=acct_no).count() > 0:
 

@@ -215,7 +215,16 @@ def info(request):
     df = web.naver.NaverDailyReader(code, start=start, end=end).read()
     #print(df)
     df = df.astype(int)  # Object 데이터를 int로 변환
-
+    OBV = []
+    OBV.append(0)
+    for i in range(1, len(df.Close)):
+        if df.Close[i] > df.Close[i - 1]:
+            OBV.append(OBV[-1] + df['Volume'][i])
+        elif df.Close[i] < df.Close[i - 1]:
+            OBV.append(OBV[-1] - df['Volume'][i])
+        else:
+            OBV.append(OBV[-1])
+    df['OBV'] = OBV
     # 캔들 차트 객체 생성
     df = df.reset_index()
     df['Date'] = df['Date'].apply(lambda x: datetime.strftime(x, '%Y-%m-%d'))  # Datetime to str
@@ -229,6 +238,7 @@ def info(request):
     fig.add_trace(data1, row=1, col=1)
     fig.add_trace(data2, row=2, col=1)
     fig.add_trace(go.Scatter(x=df['Date'], y=df['ma10'], line=dict(color="#414b73"), name='MA10'), row=2, col=1)
+    fig.add_trace(go.Scatter(x=df['Date'], y=df['OBV'], line=dict(color="black"), name='OBV'), row=2, col=1)
     fig.update_layout(xaxis1=dict(type="category", categoryorder='category ascending'),
                       xaxis2=dict(type="category", categoryorder='category ascending'), title=company+"["+code+"]",
                       yaxis1_title='Stock Price', yaxis2_title='Volume', xaxis2_title='periods',
