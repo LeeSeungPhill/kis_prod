@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'stockMarketMng.apps.StockmarketmngConfig',
     'stockOrderComplete.apps.StockordercompleteConfig',
     'stockAccount.apps.StockaccountConfig',
+    'interestItem.apps.InterestitemConfig',
     'django.contrib.humanize',
 ]
 

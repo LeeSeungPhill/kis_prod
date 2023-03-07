@@ -212,12 +212,41 @@ def send(request):
                     if i.buy_amount == 0:
                         # 자산번호 = 0 인 경우, 투자금액 설정
                         if i.asset_num == 0:
-                            stock_fund_mng_info = stock_fund_mng.objects.filter(acct_no=acct_no).order_by('-last_chg_date').first()
-                            # 상승추세 : 5,000,000원, 하락추세 및 패턴 : 2,500,000원
-                            if stock_fund_mng_info.cash_rate > 50:
-                                n_asset_sum = 5000000
+                            # 주식현재가 시세
+                            a = inquire_price(access_token, app_key, app_secret, i.code)
+                            print("시가총액 : " + format(int(a['hts_avls']), ',d'))  # 시가총액
+                            # 시가총액 5천억원 이상 : 10,000,000원, 2천억원~5천억원 미만 : 5,000,000, 2천억원 미만 : 2,500,000원
+                            if int(a['hts_avls']) > 5000:
+                                mtl = 10000000
+                            elif int(a['hts_avls']) < 2000:
+                                mtl = 2500000
                             else:
-                                n_asset_sum = 2500000
+                                mtl = 5000000
+
+                            stock_fund_mng_info = stock_fund_mng.objects.filter(acct_no=acct_no).order_by('-last_chg_date').first()
+                            # 가수도정산금액 1억원 이상 : 10,000,000원, 3천만원 이상 : 7,500,000원, 1천만원 이상 3천만원 미만 : 5,000,000원, 1천만원 미만 :
+                            if stock_fund_mng_info.prvs_rcdl_excc_amt > 100000000:
+                                sfa = 10000000
+                            elif stock_fund_mng_info.prvs_rcdl_excc_amt <= 100000000 & stock_fund_mng_info.prvs_rcdl_excc_amt > 30000000:
+                                sfa = 7500000
+                            elif stock_fund_mng_info.prvs_rcdl_excc_amt <= 30000000 & stock_fund_mng_info.prvs_rcdl_excc_amt > 10000000:
+                                sfa = 5000000
+                            else:   # 가수도정산금액 1천만원 미만 : 투자금액 0원 설정(하락추세 및 패턴인 경우, 시장흐름정액 매수 처리 안됨)
+                                sfa = 0
+
+                            # 시장흐름정액 기준 투자금액 설정
+                            # 상승추세 : 가수도정산금액 > 시가총액 -> 큰 항목 투자금액 설정, 하락추세 및 패턴 : 가수도정산금액 > 시가총액 -> 작은 항목 투자금액 설정
+                            if stock_fund_mng_info.cash_rate > 50:
+                                if sfa > mtl:
+                                    n_asset_sum = sfa
+                                else:
+                                    n_asset_sum = mtl
+                            else:
+                                if sfa > mtl:
+                                    n_asset_sum = mtl
+                                else:
+                                    n_asset_sum = sfa
+
                             # 매수량 = 투자금액 / 매수가
                             n_buy_amount = n_asset_sum / i.buy_price
                             # 매수금액

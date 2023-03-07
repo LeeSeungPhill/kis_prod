@@ -5,6 +5,7 @@ from stockBalance.viewsets import StockBalanceViewSet
 from stockMarketMng.viewsets import StockMarketMngViewSet
 from stockOrderComplete.viewsets import StockOrderCompleteViewSet
 from stockAccount.viewsets import StockAccountViewSet
+from interestItem.viewsets import InterestItemViewSet
 
 router = routers.DefaultRouter()
 router.register(r'stockOrder', StockOrderViewSet)
@@ -13,3 +14,4 @@ router.register(r'stockBalance', StockBalanceViewSet)
 router.register(r'stockMarketMng', StockMarketMngViewSet)
 router.register(r'stockOrderComplete', StockOrderCompleteViewSet)
 router.register(r'stockAccount', StockAccountViewSet)
+router.register(r'interestItem', InterestItemViewSet)

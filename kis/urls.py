@@ -27,4 +27,5 @@ urlpatterns = [
     path('stockMarketMng/', include('stockMarketMng.urls')),
     path('stockOrderComplete/', include('stockOrderComplete.urls')),
     path('stockAccount/', include('stockAccount.urls')),
+    path('interestItem/', include('interestItem.urls')),
 ]
