@@ -18,6 +18,7 @@ class stock_balance(models.Model):
     asset_num = models.BigIntegerField()                                # 자산번호(상승->하락전환, 하락->상승전환 구간시 생성)
     sell_plan_sum = models.BigIntegerField(null=True, blank=True)       # 매도가능금액
     sell_plan_amount = models.IntegerField(null=True, blank=True)       # 매도가능수량
+    proc_yn = models.CharField(max_length=1, null=True)                 # 처리여부
     last_chg_date = models.DateTimeField(auto_now=True)	                # 최종 변경일시
 
     class Meta:
