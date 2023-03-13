@@ -117,7 +117,7 @@ def list(request):
                 ren_dict = dict(zip(cf1, cf2))
                 e = tdf.rename(columns=ren_dict)
 
-                stock_balance.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num, last_chg_date__year=yyyy, last_chg_date__month=mm, last_chg_date__day=dd).delete()
+                stock_balance.objects.filter(acct_no=acct_no, proc_yn="Y").update(proc_yn="N", last_chg_date=datetime.now())
 
                 for i, name in enumerate(e.index):
                     e_name = e['종목명'][i]
@@ -153,7 +153,9 @@ def list(request):
                                       'valuation_sum': e_valuation_sum,         # 평가손익금액
                                       'asset_num': stock_fund_mng_info.asset_num,
                                       'sell_plan_sum': e_sell_plan_sum,         # 매도가능금액
-                                      'sell_plan_amount': e_sell_plan_amount    # 매도가능수량
+                                      'sell_plan_amount': e_sell_plan_amount,   # 매도가능수량
+                                      'proc_yn': "Y",                           # 처리여부
+                                      'last_chg_date':  datetime.now()
                                       }
                         )
                     else:
@@ -170,15 +172,17 @@ def list(request):
                                       'valuation_sum': e_valuation_sum,         # 평가손익금액
                                       'asset_num': stock_fund_mng_info.asset_num,
                                       'sell_plan_sum': 0,                       # 매도가능금액
-                                      'sell_plan_amount': 0                     # 매도가능수량
+                                      'sell_plan_amount': 0,                    # 매도가능수량
+                                      'proc_yn': "Y",                           # 처리여부
+                                      'last_chg_date': datetime.now()
                                       }
                         )
 
-            stock_balance_rtn = stock_balance.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num, last_chg_date__year=yyyy, last_chg_date__month=mm, last_chg_date__day=dd).order_by('-earnings_rate')
+            stock_balance_rtn = stock_balance.objects.filter(acct_no=acct_no, proc_yn="Y").order_by('-earnings_rate')
             stock_balance_rtn_list = []
 
             for index, rtn in enumerate(stock_balance_rtn, start=1):
-                stock_balance_rtn_list.append({'acct_no': rtn.acct_no, 'name':rtn.name, 'purchase_price':format(int(rtn.purchase_price), ',d'), 'purchase_amount':format(int(rtn.purchase_amount), ',d'), 'purchase_sum':format(int(rtn.purchase_sum), ',d'),
+                stock_balance_rtn_list.append({'id': rtn.id, 'acct_no': rtn.acct_no, 'name':rtn.name, 'purchase_price':format(int(rtn.purchase_price), ',d'), 'purchase_amount':format(int(rtn.purchase_amount), ',d'), 'purchase_sum':format(int(rtn.purchase_sum), ',d'),
                                                'current_price':format(int(rtn.current_price), ',d'), 'eval_sum':format(int(rtn.eval_sum), ',d'), 'earnings_rate':rtn.earnings_rate, 'valuation_sum':format(int(rtn.valuation_sum), ',d'),
                                                'end_loss_price':rtn.end_loss_price, 'end_target_price':rtn.end_target_price, 'trading_plan':rtn.trading_plan, 'asset_num':rtn.asset_num,
                                                'sell_plan_sum':rtn.sell_plan_sum, 'sell_plan_amount':rtn.sell_plan_amount, 'last_chg_date':rtn.last_chg_date})
@@ -188,6 +192,37 @@ def list(request):
         return JsonResponse(stock_balance_rtn_list, safe=False)
     except Exception as ex:
         print('잘못된 인덱스입니다.', ex)
+
+def update(request):
+    acct_no = request.GET.get('acct_no', '')
+    id = request.GET.get('id', '')
+    end_loss_price = str(int(request.GET.get('end_loss_price', '').replace(",", "")))
+    end_target_price = str(int(request.GET.get('end_target_price', '').replace(",", "")))
+    trading_plan = request.GET.get('trading_plan', '')
+
+    stock_balance.objects.filter(id=id).update(
+                    end_loss_price=int(end_loss_price),
+                    end_target_price=int(end_target_price),
+                    trading_plan=trading_plan,
+                    last_chg_date=datetime.now()
+                )
+
+    stock_balance_rtn = stock_balance.objects.filter(acct_no=acct_no, proc_yn="Y").order_by('-earnings_rate')
+    stock_balance_rtn_list = []
+
+    for index, rtn in enumerate(stock_balance_rtn, start=1):
+        stock_balance_rtn_list.append(
+            {'id': rtn.id, 'acct_no': rtn.acct_no, 'name': rtn.name, 'purchase_price': format(int(rtn.purchase_price), ',d'),
+             'purchase_amount': format(int(rtn.purchase_amount), ',d'),
+             'purchase_sum': format(int(rtn.purchase_sum), ',d'),
+             'current_price': format(int(rtn.current_price), ',d'), 'eval_sum': format(int(rtn.eval_sum), ',d'),
+             'earnings_rate': rtn.earnings_rate, 'valuation_sum': format(int(rtn.valuation_sum), ',d'),
+             'end_loss_price': rtn.end_loss_price, 'end_target_price': rtn.end_target_price,
+             'trading_plan': rtn.trading_plan, 'asset_num': rtn.asset_num,
+             'sell_plan_sum': rtn.sell_plan_sum, 'sell_plan_amount': rtn.sell_plan_amount,
+             'last_chg_date': rtn.last_chg_date})
+
+    return JsonResponse(stock_balance_rtn_list, safe=False)
 
 def info(request):
     company = request.GET.get('company', '')
