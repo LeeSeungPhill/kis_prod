@@ -236,16 +236,16 @@ def send(request):
 
                             # 시장흐름정액 기준 투자금액 설정
                             # 상승추세 : 가수도정산금액 > 시가총액 -> 큰 항목 투자금액 설정, 하락추세 및 패턴 : 가수도정산금액 > 시가총액 -> 작은 항목 투자금액 설정
-                            if stock_fund_mng_info.cash_rate > 50:
+                            if stock_fund_mng_info.cash_rate <= 50:
                                 if sfa > mtl:
-                                    n_asset_sum = sfa
-                                else:
                                     n_asset_sum = mtl
+                                else:
+                                    n_asset_sum = sfa
                             else:
                                 if sfa > mtl:
-                                    n_asset_sum = mtl
-                                else:
                                     n_asset_sum = sfa
+                                else:
+                                    n_asset_sum = mtl
 
                             # 매수량 = 투자금액 / 매수가
                             n_buy_amount = n_asset_sum / i.buy_price
