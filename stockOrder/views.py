@@ -206,6 +206,7 @@ def send(request):
     stock_orders = stock_order.objects.filter(acct_no=acct_no,create_date__year=yyyy,create_date__month=mm,create_date__day=dd,proc_yn='N')
     try:
         for i in stock_orders:
+            message = ""
             if i.trading_type == "B":       # 매수
 
                 if i.buy_price > i.loss_price:                  # 주문가 매수
@@ -224,28 +225,32 @@ def send(request):
                                 mtl = 5000000
 
                             stock_fund_mng_info = stock_fund_mng.objects.filter(acct_no=acct_no).order_by('-last_chg_date').first()
+                            print("stock_fund_mng_info.prvs_rcdl_excc_amt : " + str(stock_fund_mng_info.prvs_rcdl_excc_amt))
                             # 가수도정산금액 1억원 이상 : 10,000,000원, 3천만원 이상 : 7,500,000원, 1천만원 이상 3천만원 미만 : 5,000,000원, 1천만원 미만 :
                             if stock_fund_mng_info.prvs_rcdl_excc_amt > 100000000:
                                 sfa = 10000000
-                            elif stock_fund_mng_info.prvs_rcdl_excc_amt <= 100000000 & stock_fund_mng_info.prvs_rcdl_excc_amt > 30000000:
+                            elif stock_fund_mng_info.prvs_rcdl_excc_amt > 30000000:
                                 sfa = 7500000
-                            elif stock_fund_mng_info.prvs_rcdl_excc_amt <= 30000000 & stock_fund_mng_info.prvs_rcdl_excc_amt > 10000000:
+                            elif stock_fund_mng_info.prvs_rcdl_excc_amt > 10000000:
                                 sfa = 5000000
                             else:   # 가수도정산금액 1천만원 미만 : 투자금액 0원 설정(하락추세 및 패턴인 경우, 시장흐름정액 매수 처리 안됨)
                                 sfa = 0
 
                             # 시장흐름정액 기준 투자금액 설정
                             # 상승추세 : 가수도정산금액 > 시가총액 -> 큰 항목 투자금액 설정, 하락추세 및 패턴 : 가수도정산금액 > 시가총액 -> 작은 항목 투자금액 설정
+                            print("sfa : " + str(sfa))
+                            print("mtl : " + str(mtl))
+                            print("stock_fund_mng_info.cash_rate : " + str(stock_fund_mng_info.cash_rate))
                             if stock_fund_mng_info.cash_rate <= 50:
                                 if sfa > mtl:
-                                    n_asset_sum = mtl
-                                else:
                                     n_asset_sum = sfa
+                                else:
+                                    n_asset_sum = mtl
                             else:
                                 if sfa > mtl:
-                                    n_asset_sum = sfa
-                                else:
                                     n_asset_sum = mtl
+                                else:
+                                    n_asset_sum = sfa
 
                             # 매수량 = 투자금액 / 매수가
                             n_buy_amount = n_asset_sum / i.buy_price
@@ -294,6 +299,7 @@ def send(request):
                             )
                     else:
                         print("매수 가능(현금) 부족")
+                        message = "매수 가능(현금) 부족"
                 else:
                     if i.buy_price < 0:                         # 시장가 매수
 
@@ -323,6 +329,7 @@ def send(request):
                                 )
                         else:
                             print("매수 가능(현금) 부족")
+                            message = "매수 가능(현금) 부족"
 
             elif i.trading_type == "S":     # 매도
 
@@ -374,9 +381,11 @@ def send(request):
                         )
                 else:
                     print("매도수량 초과 주문 미처리")
+                    message = "매도수량 초과 주문 미처리"
 
             else:
                 print("매매유형 부적합 주문 미처리")
+                message = "매매유형 부적합 주문 미처리"
 
 
         asset_info = stock_fund_mng.objects.filter(acct_no=acct_no).order_by('-last_chg_date').first()
@@ -398,7 +407,7 @@ def send(request):
                             'target_price': format(rtn.target_price, ',d'), 'trading_type': rtn.trading_type, 'asset_risk_num': rtn.asset_risk_num,
                             'asset_num': rtn.asset_num, 'proc_yn': rtn.proc_yn, 'order_no': rtn.order_no, 'order_stat': rtn.order_stat,
                             'total_complete_qty': format(rtn.total_complete_qty, ',d'), 'remain_qty': format(rtn.remain_qty, ',d'), 'create_date': rtn.create_date,
-                            'proc_date': rtn.proc_date, 'stock_asset_num': asset_info.asset_num, 'stock_asset_risk_num': asset_risk_info.asset_risk_num})
+                            'proc_date': rtn.proc_date, 'stock_asset_num': asset_info.asset_num, 'stock_asset_risk_num': asset_risk_info.asset_risk_num, 'message':message})
 
                 else:
                     stock_order_rtn_list.append(
@@ -407,7 +416,7 @@ def send(request):
                          'target_price': "", 'trading_type': "", 'asset_risk_num': "",
                          'asset_num': "", 'proc_yn': "", 'order_no': "", 'order_stat': "",
                          'create_date': "", 'total_complete_qty': "", 'remain_qty': "",
-                         'proc_date': "", 'stock_asset_num': asset_info.asset_num, 'stock_asset_risk_num': asset_risk_info.asset_risk_num})
+                         'proc_date': "", 'stock_asset_num': asset_info.asset_num, 'stock_asset_risk_num': asset_risk_info.asset_risk_num, 'message':message})
 
         return JsonResponse(stock_order_rtn_list, safe=False)
     except Exception as e:
@@ -430,6 +439,7 @@ def update(request):
     dd = DateFormat(datetime.now()).format('d')
 
     try:
+        message = ""
         # 주식정정취소가능주문 조회
         #e = order_psbl_cancel_revice(access_token, app_key, app_secret, acct_no)
         #for i, name in enumerate(e.index):
@@ -459,6 +469,7 @@ def update(request):
                     )
             else:
                 print("매수 가능(현금) 부족")
+                message = "매수 가능(현금) 부족"
 
         if int(sell_price) > 0:     # 매도주문 정정
 
@@ -492,7 +503,7 @@ def update(request):
                             'target_price': format(rtn.target_price, ',d'), 'trading_type': rtn.trading_type, 'asset_risk_num': rtn.asset_risk_num,
                             'asset_num': rtn.asset_num, 'proc_yn': rtn.proc_yn, 'order_no': rtn.order_no, 'order_stat': rtn.order_stat,
                             'total_complete_qty': format(rtn.total_complete_qty, ',d'), 'remain_qty': format(rtn.remain_qty, ',d'), 'create_date': rtn.create_date,
-                            'proc_date': rtn.proc_date, 'stock_asset_num': asset_info.asset_num, 'stock_asset_risk_num': asset_risk_info.asset_risk_num})
+                            'proc_date': rtn.proc_date, 'stock_asset_num': asset_info.asset_num, 'stock_asset_risk_num': asset_risk_info.asset_risk_num, 'message': message})
 
                 else:
                     stock_order_rtn_list.append(
@@ -501,7 +512,7 @@ def update(request):
                          'target_price': "", 'trading_type': "", 'asset_risk_num': "",
                          'asset_num': "", 'proc_yn': "", 'order_no': "", 'order_stat': "",
                          'create_date': "", 'total_complete_qty': "", 'remain_qty': "",
-                         'proc_date': "", 'stock_asset_num': asset_info.asset_num, 'stock_asset_risk_num': asset_risk_info.asset_risk_num})
+                         'proc_date': "", 'stock_asset_num': asset_info.asset_num, 'stock_asset_risk_num': asset_risk_info.asset_risk_num, 'message': message})
 
         return JsonResponse(stock_order_rtn_list, safe=False)
     except Exception as e:
