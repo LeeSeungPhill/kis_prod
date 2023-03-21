@@ -184,9 +184,16 @@ def balanceList(request):
             stock_balance_rtn_list = []
 
             for index, rtn in enumerate(stock_balance_rtn, start=1):
-                stock_balance_rtn_list.append({'id': rtn.id, 'acct_no': rtn.acct_no, 'name':rtn.name, 'purchase_price':format(int(rtn.purchase_price), ',d'), 'purchase_amount':format(int(rtn.purchase_amount), ',d'), 'purchase_sum':format(int(rtn.purchase_sum), ',d'),
-                                               'current_price':format(int(rtn.current_price), ',d'), 'eval_sum':format(int(rtn.eval_sum), ',d'), 'earnings_rate':rtn.earnings_rate, 'valuation_sum':format(int(rtn.valuation_sum), ',d'),
-                                               'end_loss_price':rtn.end_loss_price, 'end_target_price':rtn.end_target_price, 'trading_plan':rtn.trading_plan, 'asset_num':rtn.asset_num,
+                rtn.K_target_price = ""
+                rtn.D_loss_price = ""
+                if int(rtn.current_price) > int(rtn.end_target_price):
+                    rtn.K_target_price = "1"
+                if int(rtn.current_price) < int(rtn.end_loss_price):
+                    rtn.D_loss_price = "1"
+
+                stock_balance_rtn_list.append({'id': rtn.id, 'acct_no': rtn.acct_no, 'name':rtn.name, 'purchase_price': format(int(rtn.purchase_price), ',d'), 'purchase_amount': format(int(rtn.purchase_amount), ',d'), 'purchase_sum':format(int(rtn.purchase_sum), ',d'),
+                                               'current_price': format(int(rtn.current_price), ',d'), 'eval_sum': format(int(rtn.eval_sum), ',d'), 'earnings_rate':rtn.earnings_rate, 'valuation_sum': format(int(rtn.valuation_sum), ',d'),
+                                               'K_target_price': rtn.K_target_price, 'D_loss_price': rtn.D_loss_price, 'end_loss_price': format(int(rtn.end_loss_price), ',d'), 'end_target_price': format(int(rtn.end_target_price), ',d'), 'trading_plan':rtn.trading_plan, 'asset_num':rtn.asset_num,
                                                'sell_plan_sum':rtn.sell_plan_sum, 'sell_plan_amount':rtn.sell_plan_amount, 'last_chg_date':rtn.last_chg_date})
         else:
             stock_balance_rtn_list = []
@@ -213,13 +220,20 @@ def update(request):
     stock_balance_rtn_list = []
 
     for index, rtn in enumerate(stock_balance_rtn, start=1):
+        rtn.K_target_price = ""
+        rtn.D_loss_price = ""
+        if int(rtn.current_price) > int(rtn.end_target_price):
+            rtn.K_target_price = "1"
+        if int(rtn.current_price) < int(rtn.end_loss_price):
+            rtn.D_loss_price = "1"
+
         stock_balance_rtn_list.append(
             {'id': rtn.id, 'acct_no': rtn.acct_no, 'name': rtn.name, 'purchase_price': format(int(rtn.purchase_price), ',d'),
              'purchase_amount': format(int(rtn.purchase_amount), ',d'),
              'purchase_sum': format(int(rtn.purchase_sum), ',d'),
              'current_price': format(int(rtn.current_price), ',d'), 'eval_sum': format(int(rtn.eval_sum), ',d'),
              'earnings_rate': rtn.earnings_rate, 'valuation_sum': format(int(rtn.valuation_sum), ',d'),
-             'end_loss_price': rtn.end_loss_price, 'end_target_price': rtn.end_target_price,
+             'K_target_price': rtn.K_target_price, 'D_loss_price': rtn.D_loss_price, 'end_loss_price': format(int(rtn.end_loss_price), ',d'), 'end_target_price': format(int(rtn.end_target_price), ',d'),
              'trading_plan': rtn.trading_plan, 'asset_num': rtn.asset_num,
              'sell_plan_sum': rtn.sell_plan_sum, 'sell_plan_amount': rtn.sell_plan_amount,
              'last_chg_date': rtn.last_chg_date})
@@ -377,8 +391,8 @@ def minutesInfo(request):
     return JsonResponse(stock_info_rtn_list, safe=False)
 
 def inquire_time_itemchartprice(access_token, app_key, app_secret, code, time):
-    #URL_BASE = "https://openapivts.koreainvestment.com:29443"  # 모의투자서비스
-    URL_BASE = "https://openapi.koreainvestment.com:9443"       # 실전서비스
+    URL_BASE = "https://openapivts.koreainvestment.com:29443"  # 모의투자서비스
+    # URL_BASE = "https://openapi.koreainvestment.com:9443"       # 실전서비스
 
     headers = {"Content-Type": "application/json",
                "authorization": f"Bearer {access_token}",
