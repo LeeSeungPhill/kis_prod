@@ -186,6 +186,12 @@ def balanceList(request):
             for index, rtn in enumerate(stock_balance_rtn, start=1):
                 rtn.K_target_price = ""
                 rtn.D_loss_price = ""
+
+                if rtn.end_loss_price == None:
+                    rtn.end_loss_price = "0"
+                if rtn.end_target_price == None:
+                    rtn.end_target_price = "0"
+
                 if int(rtn.current_price) > int(rtn.end_target_price):
                     rtn.K_target_price = "1"
                 if int(rtn.current_price) < int(rtn.end_loss_price):
@@ -222,6 +228,12 @@ def update(request):
     for index, rtn in enumerate(stock_balance_rtn, start=1):
         rtn.K_target_price = ""
         rtn.D_loss_price = ""
+
+        if rtn.end_loss_price == None:
+            rtn.end_loss_price = "0"
+        if rtn.end_target_price == None:
+            rtn.end_target_price = "0"
+
         if int(rtn.current_price) > int(rtn.end_target_price):
             rtn.K_target_price = "1"
         if int(rtn.current_price) < int(rtn.end_loss_price):
@@ -391,8 +403,8 @@ def minutesInfo(request):
     return JsonResponse(stock_info_rtn_list, safe=False)
 
 def inquire_time_itemchartprice(access_token, app_key, app_secret, code, time):
-    URL_BASE = "https://openapivts.koreainvestment.com:29443"  # 모의투자서비스
-    # URL_BASE = "https://openapi.koreainvestment.com:9443"       # 실전서비스
+    #URL_BASE = "https://openapivts.koreainvestment.com:29443"  # 모의투자서비스
+    URL_BASE = "https://openapi.koreainvestment.com:9443"       # 실전서비스
 
     headers = {"Content-Type": "application/json",
                "authorization": f"Bearer {access_token}",
