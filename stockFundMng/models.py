@@ -14,7 +14,22 @@ class stock_fund_mng(models.Model):
     asset_icdc_amt = models.BigIntegerField(null=True, blank=True)      # 자산증감액
     sell_plan_amt = models.BigIntegerField(null=True, blank=True)       # 매도예정자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
     buy_plan_amt = models.BigIntegerField(null=True, blank=True)        # 매수예정자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
+    market_ratio = models.BigIntegerField(null=True, blank=True)         # 시장 승률
     last_chg_date = models.DateTimeField(auto_now=True)                 # 최종 변경일시
 
     class Meta:
         unique_together = (('asset_num', 'acct_no'),)
+
+class trail_signal_recent(models.Model):
+    id = models.AutoField(primary_key=True)
+    acct_no = models.CharField(max_length=8)
+    trail_day = models.CharField(max_length=8)
+    trail_time = models.CharField(max_length=4)
+    trail_signal_code = models.CharField(max_length=2)
+    trail_signal_name = models.CharField(max_length=20)
+    code = models.CharField(max_length=6)
+    name = models.CharField(max_length=30)
+
+    class Meta:
+        managed = False
+        db_table = 'trail_signal_recent'

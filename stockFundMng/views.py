@@ -1,5 +1,6 @@
 from django.http import JsonResponse
-from .models import stock_fund_mng
+from .models import stock_fund_mng, trail_signal_recent
+from interestItem.models import interest_item
 from kis import kis_api_resp as resp
 from django.utils.dateformat import DateFormat
 from datetime import datetime
@@ -112,3 +113,45 @@ def list(request):
         stock_fund_mng_rtn_list = []
 
     return JsonResponse(stock_fund_mng_rtn_list, safe=False)
+
+def marketReg(request):
+    acct_no = request.GET.get('acct_no', '')
+
+    # 코스피 미존재시 관심종목 생성
+    if interest_item.objects.filter(acct_no=acct_no, code='0001').count() < 1:
+        s1 = interest_item.objects.create(acct_no=acct_no, code='0001', name='코스피', through_price=0, leave_price=0, resist_price=0, support_price=0, trend_high_price=0, trend_low_price=0, last_chg_date=datetime.now())
+        s1.save()
+
+    # 코스닥 미존재시 관심종목 생성
+    if interest_item.objects.filter(acct_no=acct_no, code='1001').count() < 1:
+        s2 = interest_item.objects.create(acct_no=acct_no, code='1001', name='코스닥', through_price=0, leave_price=0, resist_price=0, support_price=0, trend_high_price=0, trend_low_price=0, last_chg_date=datetime.now())
+        s2.save()
+
+    trail_signal_result1 = trail_signal_recent.objects.filter(acct_no=acct_no, code='0001', id=1)
+    for index, rtn in enumerate(trail_signal_result1, start=1):
+        print(rtn.trail_signal_name)
+
+    trail_signal_result2 = trail_signal_recent.objects.filter(acct_no=acct_no, code='1001', id=1)
+    for index, rtn in enumerate(trail_signal_result2, start=1):
+        print(rtn.trail_signal_name)
+
+    # 시장 신호 정보 변경 기준 현금 비율 변경
+
+    # 시장 승률정보 저장처리
+
+
+
+    today = datetime.now().strftime("%Y%m%d")
+
+    # 관심종목, 보유종목 신호 발생 정보
+    trail_signal_rtn = trail_signal_recent.objects.filter(acct_no=acct_no, id=1)
+    trail_signal_rtn_list = []
+
+    for index, rtn in enumerate(trail_signal_rtn, start=1):
+        print(rtn.trail_signal_name)
+        trail_signal_rtn_list.append(
+            {'acct_no': rtn.acct_no, 'trail_day': rtn.trail_day, 'trail_time': rtn.trail_time,
+             'trail_signal_code': rtn.trail_signal_code, 'trail_signal_name': rtn.trail_signal_name,
+             'code': rtn.code, 'name': rtn.name})
+
+    return JsonResponse(trail_signal_rtn_list, safe=False)
