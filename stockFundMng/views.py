@@ -127,15 +127,68 @@ def marketReg(request):
         s2 = interest_item.objects.create(acct_no=acct_no, code='1001', name='코스닥', through_price=0, leave_price=0, resist_price=0, support_price=0, trend_high_price=0, trend_low_price=0, last_chg_date=datetime.now())
         s2.save()
 
-    trail_signal_result1 = trail_signal_recent.objects.filter(acct_no=acct_no, code='0001', id=1)
-    for index, rtn in enumerate(trail_signal_result1, start=1):
-        print(rtn.trail_signal_name)
+    trail_signal_result1 = trail_signal_recent.objects.filter(acct_no=acct_no, code='0001', id=1).order_by('-trail_day','-trail_time').first()
 
-    trail_signal_result2 = trail_signal_recent.objects.filter(acct_no=acct_no, code='1001', id=1)
-    for index, rtn in enumerate(trail_signal_result2, start=1):
-        print(rtn.trail_signal_name)
+    #for index, rtn in enumerate(trail_signal_result1, start=1):
+        #print(rtn.trail_signal_name)
+
+
+    trail_signal_result2 = trail_signal_recent.objects.filter(acct_no=acct_no, code='1001', id=1).order_by('-trail_day','-trail_time').first()
+
+    #for index, rtn in enumerate(trail_signal_result2, start=1):
+        #print(rtn.trail_signal_name)
 
     # 시장 신호 정보 변경 기준 현금 비율 변경
+    stock_fund_mng_info = stock_fund_mng.objects.filter(acct_no=acct_no).order_by('-last_chg_date').first()
+
+    # 코스피 시장 신호 발생한 경우
+    if trail_signal_result1.trail_signal_code != None:
+        if trail_signal_result1.trail_signal_code == '03': # 저항가 돌파
+            cash_rate = 30 # 전체금액의 30% 미만 현금 비중 설정
+            cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
+        elif trail_signal_result1.trail_signal_code == '04': # 지지가 이탈
+            cash_rate = 70 # 전체금액의 70% 이상 현금 비중 설정
+            cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
+        elif trail_signal_result1.trail_signal_code == '05': # 추세상단가 돌파
+            cash_rate = 10 # 전체금액의 10% 미만 현금 비중 설정
+            cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
+        elif trail_signal_result1.trail_signal_code == '06': # 추세하단가 이탈
+            cash_rate = 90 # 전체금액의 90% 이상 현금 비중 설정
+            cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
+        elif trail_signal_result1.trail_signal_code == '01': # 돌파가 돌파
+            remain_cash_rate = 30 # 남은 현금기준 비중 30% 미만 현금 비중 설정
+            cash_rate_amt = round(stock_fund_mng_info.prvs_rcdl_excc_amt * remain_cash_rate * 0.01, 0)  # 가수도정산금액 기준 현금 비중 금액
+            cash_rate = (stock_fund_mng_info.tot_evlu_amt/(stock_fund_mng_info.tot_evlu_amt + stock_fund_mng_info.prvs_rcdl_excc_amt - cash_rate_amt))*100
+        elif trail_signal_result1.trail_signal_code == '02': # 이탈가 이탈
+            remain_cash_rate = 70 # 남은 현금기준 비중 70% 이상 현금 비중 설정
+            cash_rate_amt = round(stock_fund_mng_info.prvs_rcdl_excc_amt * remain_cash_rate * 0.01, 0)  # 가수도정산금액 기준 현금 비중 금액
+            cash_rate = (stock_fund_mng_info.tot_evlu_amt / (stock_fund_mng_info.tot_evlu_amt + stock_fund_mng_info.prvs_rcdl_excc_amt - cash_rate_amt)) * 100
+
+        print("현금비중 : " + format(int(cash_rate), ',d'))
+        print("현금비중금액 : " + format(int(cash_rate_amt), ',d'))
+        sell_plan_amt = cash_rate_amt - stock_fund_mng_info.prvs_rcdl_excc_amt  # 매도예정자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
+        if sell_plan_amt < 0:
+            sell_plan_amt = 0
+
+        buy_plan_amt = stock_fund_mng_info.prvs_rcdl_excc_amt - cash_rate_amt  # 매수예정자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
+        if buy_plan_amt < 0:
+            buy_plan_amt = 0
+
+        stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).update(
+            cash_rate=cash_rate,
+            cash_rate_amt=cash_rate_amt,  # 총평가금액 기준 현금 비중 금액
+            sell_plan_amt=sell_plan_amt,  # 매도 예정 자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
+            buy_plan_amt=buy_plan_amt,  # 매수 예정 자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
+            last_chg_date=datetime.now()
+        )
+
+    # 코스닥 시장 신호 발생한 경우
+    #if trail_signal_result2.trail_signal_code != None:
+
+
+
+
+
 
     # 시장 승률정보 저장처리
 
