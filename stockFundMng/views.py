@@ -74,28 +74,41 @@ def list(request):
                     u_scts_evlu_amt = int(f['scts_evlu_amt'][i])            # 유저 평가 금액
                     u_asst_icdc_amt = int(f['asst_icdc_amt'][i])            # 자산 증감액
 
-                u_cash_rate_amt = round(u_tot_evlu_amt * stock_fund_mng_info.cash_rate * 0.01, 0)   # 총평가금액 기준 현금 비중 금액
-                print("총평가금액 기준 현금비중금액 : " + format(int(u_cash_rate_amt), ',d'))
-                u_sell_plan_amt = u_cash_rate_amt - u_prvs_rcdl_excc_amt  # 매도예정자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
-                if u_sell_plan_amt < 0:
-                    u_sell_plan_amt = 0
+                if assetInfo != '':
+                    u_cash_rate_amt = round(u_tot_evlu_amt * stock_fund_mng_info.cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
+                    print("총평가금액 기준 현금비중금액 : " + format(int(u_cash_rate_amt), ',d'))
 
-                u_buy_plan_amt = u_prvs_rcdl_excc_amt - u_cash_rate_amt   # 매수예정자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
-                if u_buy_plan_amt < 0:
-                    u_buy_plan_amt = 0
+                    u_sell_plan_amt = u_cash_rate_amt - u_prvs_rcdl_excc_amt  # 매도예정자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
+                    if u_sell_plan_amt < 0:
+                        u_sell_plan_amt = 0
 
-                stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).update(
-                    tot_evlu_amt=u_tot_evlu_amt,                # 총평가금액
-                    dnca_tot_amt=u_dnca_tot_amt,                # 예수금 총금액
-                    prvs_rcdl_excc_amt=u_prvs_rcdl_excc_amt,    # 가수도 정산금액
-                    nass_amt=u_nass_amt,                        # 순자산금액(세금비용 제외)
-                    scts_evlu_amt = u_scts_evlu_amt,            # 유저평가금액
-                    asset_icdc_amt = u_asst_icdc_amt,           # 자산증감액
-                    cash_rate_amt = u_cash_rate_amt,            # 총평가금액 기준 현금 비중 금액
-                    sell_plan_amt = u_sell_plan_amt,            # 매도 예정 자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
-                    buy_plan_amt = u_buy_plan_amt,               # 매수 예정 자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
-                    last_chg_date = datetime.now()
-                )
+                    u_buy_plan_amt = u_prvs_rcdl_excc_amt - u_cash_rate_amt   # 매수예정자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
+                    if u_buy_plan_amt < 0:
+                        u_buy_plan_amt = 0
+
+                    stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).update(
+                        tot_evlu_amt=u_tot_evlu_amt,                # 총평가금액
+                        dnca_tot_amt=u_dnca_tot_amt,                # 예수금 총금액
+                        prvs_rcdl_excc_amt=u_prvs_rcdl_excc_amt,    # 가수도 정산금액
+                        nass_amt=u_nass_amt,                        # 순자산금액(세금비용 제외)
+                        scts_evlu_amt = u_scts_evlu_amt,            # 유저평가금액
+                        asset_icdc_amt = u_asst_icdc_amt,           # 자산증감액
+                        cash_rate_amt = u_cash_rate_amt,            # 총평가금액 기준 현금 비중 금액
+                        sell_plan_amt = u_sell_plan_amt,            # 매도 예정 자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
+                        buy_plan_amt = u_buy_plan_amt,               # 매수 예정 자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
+                        last_chg_date = datetime.now()
+                    )
+                else:
+                    stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).update(
+                        tot_evlu_amt=u_tot_evlu_amt,  # 총평가금액
+                        dnca_tot_amt=u_dnca_tot_amt,  # 예수금 총금액
+                        prvs_rcdl_excc_amt=u_prvs_rcdl_excc_amt,  # 가수도 정산금액
+                        nass_amt=u_nass_amt,  # 순자산금액(세금비용 제외)
+                        scts_evlu_amt=u_scts_evlu_amt,  # 유저평가금액
+                        asset_icdc_amt=u_asst_icdc_amt,  # 자산증감액
+                        last_chg_date=datetime.now()
+                    )
+
         except Exception as e:
             print('잘못된 인덱스입니다.', e)
 
@@ -128,21 +141,14 @@ def marketReg(request):
         s2.save()
 
     trail_signal_result1 = trail_signal_recent.objects.filter(acct_no=acct_no, code='0001', id=1).order_by('-trail_day','-trail_time').first()
-
-    #for index, rtn in enumerate(trail_signal_result1, start=1):
-        #print(rtn.trail_signal_name)
-
-
     trail_signal_result2 = trail_signal_recent.objects.filter(acct_no=acct_no, code='1001', id=1).order_by('-trail_day','-trail_time').first()
-
-    #for index, rtn in enumerate(trail_signal_result2, start=1):
-        #print(rtn.trail_signal_name)
 
     # 시장 신호 정보 변경 기준 현금 비율 변경
     stock_fund_mng_info = stock_fund_mng.objects.filter(acct_no=acct_no).order_by('-last_chg_date').first()
 
     # 코스피 시장 신호 발생한 경우
     if trail_signal_result1.trail_signal_code != None:
+        print("trail_signal_result1.trail_signal_code : " + trail_signal_result1.trail_signal_code)
         if trail_signal_result1.trail_signal_code == '03': # 저항가 돌파
             cash_rate = 30 # 전체금액의 30% 미만 현금 비중 설정
             cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
@@ -158,11 +164,11 @@ def marketReg(request):
         elif trail_signal_result1.trail_signal_code == '01': # 돌파가 돌파
             remain_cash_rate = 30 # 남은 현금기준 비중 30% 미만 현금 비중 설정
             cash_rate_amt = round(stock_fund_mng_info.prvs_rcdl_excc_amt * remain_cash_rate * 0.01, 0)  # 가수도정산금액 기준 현금 비중 금액
-            cash_rate = (stock_fund_mng_info.tot_evlu_amt/(stock_fund_mng_info.tot_evlu_amt + stock_fund_mng_info.prvs_rcdl_excc_amt - cash_rate_amt))*100
+            cash_rate = 100 - (stock_fund_mng_info.tot_evlu_amt/(stock_fund_mng_info.tot_evlu_amt + stock_fund_mng_info.prvs_rcdl_excc_amt - cash_rate_amt)) * 100
         elif trail_signal_result1.trail_signal_code == '02': # 이탈가 이탈
             remain_cash_rate = 70 # 남은 현금기준 비중 70% 이상 현금 비중 설정
             cash_rate_amt = round(stock_fund_mng_info.prvs_rcdl_excc_amt * remain_cash_rate * 0.01, 0)  # 가수도정산금액 기준 현금 비중 금액
-            cash_rate = (stock_fund_mng_info.tot_evlu_amt / (stock_fund_mng_info.tot_evlu_amt + stock_fund_mng_info.prvs_rcdl_excc_amt - cash_rate_amt)) * 100
+            cash_rate = 100 - (stock_fund_mng_info.tot_evlu_amt / (stock_fund_mng_info.tot_evlu_amt + stock_fund_mng_info.prvs_rcdl_excc_amt - cash_rate_amt)) * 100
 
         print("현금비중 : " + format(int(cash_rate), ',d'))
         print("현금비중금액 : " + format(int(cash_rate_amt), ',d'))
