@@ -211,13 +211,13 @@ def marketReg(request):
                 kosdak_ratio = "D"  # 시장 하락
 
             # 시장 승률정보 저장처리
-            if kospi_ratio == "H" & kosdak_ratio == "H":    # 코스피 강세 & 코스닥 강세
+            if kospi_ratio == "H" and kosdak_ratio == "H":    # 코스피 강세 & 코스닥 강세
                 market_ratio = 90
-            elif kospi_ratio == "H" & kosdak_ratio == "D":  # 코스피 강세 & 코스닥 약세
+            elif kospi_ratio == "H" and kosdak_ratio == "D":  # 코스피 강세 & 코스닥 약세
                 market_ratio = 70
-            elif kospi_ratio == "D" & kosdak_ratio == "H":  # 코스피 약세 & 코스닥 강세
+            elif kospi_ratio == "D" and kosdak_ratio == "H":  # 코스피 약세 & 코스닥 강세
                 market_ratio = 50
-            elif kospi_ratio == "D" & kosdak_ratio == "D":  # 코스피 약세 & 코스닥 약세
+            elif kospi_ratio == "D" and kosdak_ratio == "D":  # 코스피 약세 & 코스닥 약세
                 market_ratio = 30
 
             stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).update(
