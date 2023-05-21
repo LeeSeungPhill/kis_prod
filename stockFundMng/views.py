@@ -147,25 +147,31 @@ def marketReg(request):
     stock_fund_mng_info = stock_fund_mng.objects.filter(acct_no=acct_no).order_by('-last_chg_date').first()
 
     # 코스피 시장 신호 발생한 경우
-    if trail_signal_result1.trail_signal_code != None:
+    if trail_signal_result1.count() > 0:
         print("trail_signal_result1.trail_signal_code : " + trail_signal_result1.trail_signal_code)
         if trail_signal_result1.trail_signal_code == '03': # 저항가 돌파
+            kospi_ratio = "H"  # 시장 상승
             cash_rate = 30 # 전체금액의 30% 미만 현금 비중 설정
             cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
         elif trail_signal_result1.trail_signal_code == '04': # 지지가 이탈
+            kospi_ratio = "D"  # 시장 하락
             cash_rate = 70 # 전체금액의 70% 이상 현금 비중 설정
             cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
         elif trail_signal_result1.trail_signal_code == '05': # 추세상단가 돌파
+            kospi_ratio = "H"  # 시장 상승
             cash_rate = 10 # 전체금액의 10% 미만 현금 비중 설정
             cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
         elif trail_signal_result1.trail_signal_code == '06': # 추세하단가 이탈
+            kospi_ratio = "D"  # 시장 하락
             cash_rate = 90 # 전체금액의 90% 이상 현금 비중 설정
             cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
         elif trail_signal_result1.trail_signal_code == '01': # 돌파가 돌파
+            kospi_ratio = "H"  # 시장 상승
             remain_cash_rate = 30 # 남은 현금기준 비중 30% 미만 현금 비중 설정
             cash_rate_amt = round(stock_fund_mng_info.prvs_rcdl_excc_amt * remain_cash_rate * 0.01, 0)  # 가수도정산금액 기준 현금 비중 금액
             cash_rate = 100 - (stock_fund_mng_info.tot_evlu_amt/(stock_fund_mng_info.tot_evlu_amt + stock_fund_mng_info.prvs_rcdl_excc_amt - cash_rate_amt)) * 100
         elif trail_signal_result1.trail_signal_code == '02': # 이탈가 이탈
+            kospi_ratio = "D"  # 시장 하락
             remain_cash_rate = 70 # 남은 현금기준 비중 70% 이상 현금 비중 설정
             cash_rate_amt = round(stock_fund_mng_info.prvs_rcdl_excc_amt * remain_cash_rate * 0.01, 0)  # 가수도정산금액 기준 현금 비중 금액
             cash_rate = 100 - (stock_fund_mng_info.tot_evlu_amt / (stock_fund_mng_info.tot_evlu_amt + stock_fund_mng_info.prvs_rcdl_excc_amt - cash_rate_amt)) * 100
@@ -188,17 +194,36 @@ def marketReg(request):
             last_chg_date=datetime.now()
         )
 
-    # 코스닥 시장 신호 발생한 경우
-    #if trail_signal_result2.trail_signal_code != None:
+        # 코스닥 시장 신호 발생한 경우
+        if trail_signal_result2.count() > 0:
+            print("trail_signal_result2.trail_signal_code : " + trail_signal_result2.trail_signal_code)
+            if trail_signal_result2.trail_signal_code == '03':  # 저항가 돌파
+                kosdak_ratio = "H"  # 시장 상승
+            elif trail_signal_result2.trail_signal_code == '04':  # 지지가 이탈
+                kosdak_ratio = "D"  # 시장 하락
+            elif trail_signal_result2.trail_signal_code == '05':  # 추세상단가 돌파
+                kosdak_ratio = "H"  # 시장 상승
+            elif trail_signal_result2.trail_signal_code == '06':  # 추세하단가 이탈
+                kosdak_ratio = "D"  # 시장 하락
+            elif trail_signal_result2.trail_signal_code == '01':  # 돌파가 돌파
+                kosdak_ratio = "H"  # 시장 상승
+            elif trail_signal_result2.trail_signal_code == '02':  # 이탈가 이탈
+                kosdak_ratio = "D"  # 시장 하락
 
+            # 시장 승률정보 저장처리
+            if kospi_ratio == "H" & kosdak_ratio == "H":    # 코스피 강세 & 코스닥 강세
+                market_ratio = 90
+            elif kospi_ratio == "H" & kosdak_ratio == "D":  # 코스피 강세 & 코스닥 약세
+                market_ratio = 70
+            elif kospi_ratio == "D" & kosdak_ratio == "H":  # 코스피 약세 & 코스닥 강세
+                market_ratio = 50
+            elif kospi_ratio == "D" & kosdak_ratio == "D":  # 코스피 약세 & 코스닥 약세
+                market_ratio = 30
 
-
-
-
-
-    # 시장 승률정보 저장처리
-
-
+            stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).update(
+                market_ratio=market_ratio,  # 시장 승률정보
+                last_chg_date=datetime.now()
+            )
 
     today = datetime.now().strftime("%Y%m%d")
 
