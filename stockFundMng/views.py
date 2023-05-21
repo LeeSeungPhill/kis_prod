@@ -140,90 +140,91 @@ def marketReg(request):
         s2 = interest_item.objects.create(acct_no=acct_no, code='1001', name='코스닥', through_price=0, leave_price=0, resist_price=0, support_price=0, trend_high_price=0, trend_low_price=0, last_chg_date=datetime.now())
         s2.save()
 
-    trail_signal_result1 = trail_signal_recent.objects.filter(acct_no=acct_no, code='0001', id=1).order_by('-trail_day','-trail_time').first()
-    trail_signal_result2 = trail_signal_recent.objects.filter(acct_no=acct_no, code='1001', id=1).order_by('-trail_day','-trail_time').first()
+    if trail_signal_recent.objects.count() > 0:
 
-    # 시장 신호 정보 변경 기준 현금 비율 변경
-    stock_fund_mng_info = stock_fund_mng.objects.filter(acct_no=acct_no).order_by('-last_chg_date').first()
+        # 코스피 시장 신호 발생한 경우
+        if trail_signal_recent.objects.filter(acct_no=acct_no, code='0001', id=1).count() > 0:
+            trail_signal_result1 = trail_signal_recent.objects.filter(acct_no=acct_no, code='0001', id=1).order_by('-trail_day','-trail_time').first()
+            print("trail_signal_result1.trail_signal_code : " + trail_signal_result1.trail_signal_code)
+            # 시장 신호 정보 변경 기준 현금 비율 변경
+            stock_fund_mng_info = stock_fund_mng.objects.filter(acct_no=acct_no).order_by('-last_chg_date').first()
 
-    # 코스피 시장 신호 발생한 경우
-    if trail_signal_result1.count() > 0:
-        print("trail_signal_result1.trail_signal_code : " + trail_signal_result1.trail_signal_code)
-        if trail_signal_result1.trail_signal_code == '03': # 저항가 돌파
-            kospi_ratio = "H"  # 시장 상승
-            cash_rate = 30 # 전체금액의 30% 미만 현금 비중 설정
-            cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
-        elif trail_signal_result1.trail_signal_code == '04': # 지지가 이탈
-            kospi_ratio = "D"  # 시장 하락
-            cash_rate = 70 # 전체금액의 70% 이상 현금 비중 설정
-            cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
-        elif trail_signal_result1.trail_signal_code == '05': # 추세상단가 돌파
-            kospi_ratio = "H"  # 시장 상승
-            cash_rate = 10 # 전체금액의 10% 미만 현금 비중 설정
-            cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
-        elif trail_signal_result1.trail_signal_code == '06': # 추세하단가 이탈
-            kospi_ratio = "D"  # 시장 하락
-            cash_rate = 90 # 전체금액의 90% 이상 현금 비중 설정
-            cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
-        elif trail_signal_result1.trail_signal_code == '01': # 돌파가 돌파
-            kospi_ratio = "H"  # 시장 상승
-            remain_cash_rate = 30 # 남은 현금기준 비중 30% 미만 현금 비중 설정
-            cash_rate_amt = round(stock_fund_mng_info.prvs_rcdl_excc_amt * remain_cash_rate * 0.01, 0)  # 가수도정산금액 기준 현금 비중 금액
-            cash_rate = 100 - (stock_fund_mng_info.tot_evlu_amt/(stock_fund_mng_info.tot_evlu_amt + stock_fund_mng_info.prvs_rcdl_excc_amt - cash_rate_amt)) * 100
-        elif trail_signal_result1.trail_signal_code == '02': # 이탈가 이탈
-            kospi_ratio = "D"  # 시장 하락
-            remain_cash_rate = 70 # 남은 현금기준 비중 70% 이상 현금 비중 설정
-            cash_rate_amt = round(stock_fund_mng_info.prvs_rcdl_excc_amt * remain_cash_rate * 0.01, 0)  # 가수도정산금액 기준 현금 비중 금액
-            cash_rate = 100 - (stock_fund_mng_info.tot_evlu_amt / (stock_fund_mng_info.tot_evlu_amt + stock_fund_mng_info.prvs_rcdl_excc_amt - cash_rate_amt)) * 100
+            if trail_signal_result1.trail_signal_code == '03': # 저항가 돌파
+                kospi_ratio = "H"  # 시장 상승
+                cash_rate = 30 # 전체금액의 30% 미만 현금 비중 설정
+                cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
+            elif trail_signal_result1.trail_signal_code == '04': # 지지가 이탈
+                kospi_ratio = "D"  # 시장 하락
+                cash_rate = 70 # 전체금액의 70% 이상 현금 비중 설정
+                cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
+            elif trail_signal_result1.trail_signal_code == '05': # 추세상단가 돌파
+                kospi_ratio = "H"  # 시장 상승
+                cash_rate = 10 # 전체금액의 10% 미만 현금 비중 설정
+                cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
+            elif trail_signal_result1.trail_signal_code == '06': # 추세하단가 이탈
+                kospi_ratio = "D"  # 시장 하락
+                cash_rate = 90 # 전체금액의 90% 이상 현금 비중 설정
+                cash_rate_amt = round(stock_fund_mng_info.tot_evlu_amt * cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
+            elif trail_signal_result1.trail_signal_code == '01': # 돌파가 돌파
+                kospi_ratio = "H"  # 시장 상승
+                remain_cash_rate = 30 # 남은 현금기준 비중 30% 미만 현금 비중 설정
+                cash_rate_amt = round(stock_fund_mng_info.prvs_rcdl_excc_amt * remain_cash_rate * 0.01, 0)  # 가수도정산금액 기준 현금 비중 금액
+                cash_rate = 100 - (stock_fund_mng_info.tot_evlu_amt/(stock_fund_mng_info.tot_evlu_amt + stock_fund_mng_info.prvs_rcdl_excc_amt - cash_rate_amt)) * 100
+            elif trail_signal_result1.trail_signal_code == '02': # 이탈가 이탈
+                kospi_ratio = "D"  # 시장 하락
+                remain_cash_rate = 70 # 남은 현금기준 비중 70% 이상 현금 비중 설정
+                cash_rate_amt = round(stock_fund_mng_info.prvs_rcdl_excc_amt * remain_cash_rate * 0.01, 0)  # 가수도정산금액 기준 현금 비중 금액
+                cash_rate = 100 - (stock_fund_mng_info.tot_evlu_amt / (stock_fund_mng_info.tot_evlu_amt + stock_fund_mng_info.prvs_rcdl_excc_amt - cash_rate_amt)) * 100
 
-        print("현금비중 : " + format(int(cash_rate), ',d'))
-        print("현금비중금액 : " + format(int(cash_rate_amt), ',d'))
-        sell_plan_amt = cash_rate_amt - stock_fund_mng_info.prvs_rcdl_excc_amt  # 매도예정자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
-        if sell_plan_amt < 0:
-            sell_plan_amt = 0
+            print("현금비중 : " + format(int(cash_rate), ',d'))
+            print("현금비중금액 : " + format(int(cash_rate_amt), ',d'))
+            sell_plan_amt = cash_rate_amt - stock_fund_mng_info.prvs_rcdl_excc_amt  # 매도예정자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
+            if sell_plan_amt < 0:
+                sell_plan_amt = 0
 
-        buy_plan_amt = stock_fund_mng_info.prvs_rcdl_excc_amt - cash_rate_amt  # 매수예정자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
-        if buy_plan_amt < 0:
-            buy_plan_amt = 0
-
-        stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).update(
-            cash_rate=cash_rate,
-            cash_rate_amt=cash_rate_amt,  # 총평가금액 기준 현금 비중 금액
-            sell_plan_amt=sell_plan_amt,  # 매도 예정 자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
-            buy_plan_amt=buy_plan_amt,  # 매수 예정 자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
-            last_chg_date=datetime.now()
-        )
-
-        # 코스닥 시장 신호 발생한 경우
-        if trail_signal_result2.count() > 0:
-            print("trail_signal_result2.trail_signal_code : " + trail_signal_result2.trail_signal_code)
-            if trail_signal_result2.trail_signal_code == '03':  # 저항가 돌파
-                kosdak_ratio = "H"  # 시장 상승
-            elif trail_signal_result2.trail_signal_code == '04':  # 지지가 이탈
-                kosdak_ratio = "D"  # 시장 하락
-            elif trail_signal_result2.trail_signal_code == '05':  # 추세상단가 돌파
-                kosdak_ratio = "H"  # 시장 상승
-            elif trail_signal_result2.trail_signal_code == '06':  # 추세하단가 이탈
-                kosdak_ratio = "D"  # 시장 하락
-            elif trail_signal_result2.trail_signal_code == '01':  # 돌파가 돌파
-                kosdak_ratio = "H"  # 시장 상승
-            elif trail_signal_result2.trail_signal_code == '02':  # 이탈가 이탈
-                kosdak_ratio = "D"  # 시장 하락
-
-            # 시장 승률정보 저장처리
-            if kospi_ratio == "H" and kosdak_ratio == "H":    # 코스피 강세 & 코스닥 강세
-                market_ratio = 90
-            elif kospi_ratio == "H" and kosdak_ratio == "D":  # 코스피 강세 & 코스닥 약세
-                market_ratio = 70
-            elif kospi_ratio == "D" and kosdak_ratio == "H":  # 코스피 약세 & 코스닥 강세
-                market_ratio = 50
-            elif kospi_ratio == "D" and kosdak_ratio == "D":  # 코스피 약세 & 코스닥 약세
-                market_ratio = 30
+            buy_plan_amt = stock_fund_mng_info.prvs_rcdl_excc_amt - cash_rate_amt  # 매수예정자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
+            if buy_plan_amt < 0:
+                buy_plan_amt = 0
 
             stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).update(
-                market_ratio=market_ratio,  # 시장 승률정보
+                cash_rate=cash_rate,
+                cash_rate_amt=cash_rate_amt,  # 총평가금액 기준 현금 비중 금액
+                sell_plan_amt=sell_plan_amt,  # 매도 예정 자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
+                buy_plan_amt=buy_plan_amt,  # 매수 예정 자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
                 last_chg_date=datetime.now()
             )
+
+            # 코스닥 시장 신호 발생한 경우
+            if trail_signal_recent.objects.filter(acct_no=acct_no, code='1001', id=1).count() > 0:
+                trail_signal_result2 = trail_signal_recent.objects.filter(acct_no=acct_no, code='1001', id=1).order_by('-trail_day', '-trail_time').first()
+                print("trail_signal_result2.trail_signal_code : " + trail_signal_result2.trail_signal_code)
+                if trail_signal_result2.trail_signal_code == '03':  # 저항가 돌파
+                    kosdak_ratio = "H"  # 시장 상승
+                elif trail_signal_result2.trail_signal_code == '04':  # 지지가 이탈
+                    kosdak_ratio = "D"  # 시장 하락
+                elif trail_signal_result2.trail_signal_code == '05':  # 추세상단가 돌파
+                    kosdak_ratio = "H"  # 시장 상승
+                elif trail_signal_result2.trail_signal_code == '06':  # 추세하단가 이탈
+                    kosdak_ratio = "D"  # 시장 하락
+                elif trail_signal_result2.trail_signal_code == '01':  # 돌파가 돌파
+                    kosdak_ratio = "H"  # 시장 상승
+                elif trail_signal_result2.trail_signal_code == '02':  # 이탈가 이탈
+                    kosdak_ratio = "D"  # 시장 하락
+
+                # 시장 승률정보 저장처리
+                if kospi_ratio == "H" and kosdak_ratio == "H":    # 코스피 강세 & 코스닥 강세
+                    market_ratio = 90
+                elif kospi_ratio == "H" and kosdak_ratio == "D":  # 코스피 강세 & 코스닥 약세
+                    market_ratio = 70
+                elif kospi_ratio == "D" and kosdak_ratio == "H":  # 코스피 약세 & 코스닥 강세
+                    market_ratio = 50
+                elif kospi_ratio == "D" and kosdak_ratio == "D":  # 코스피 약세 & 코스닥 약세
+                    market_ratio = 30
+
+                stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).update(
+                    market_ratio=market_ratio,  # 시장 승률정보
+                    last_chg_date=datetime.now()
+                )
 
     today = datetime.now().strftime("%Y%m%d")
 
