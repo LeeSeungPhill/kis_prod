@@ -29,12 +29,15 @@ def list(request):
             rtn.D_support_price = ""
             rtn.K_trend_high_price = ""
             rtn.D_trend_low_price = ""
+            total_market_value = 0
 
             if len(rtn.code) == 6:
                 # 주식현재가 시세
                 a = inquire_price(access_token, app_key, app_secret, rtn.code)
                 current_price = format(int(a['stck_prpr']), ',d')
                 print("현재가 : "+current_price)
+                total_market_value = format(int(a['hts_avls']), ',d')
+                print("시가총액 : " + total_market_value)
                 if int(a['stck_prpr']) > int(rtn.through_price):
                     rtn.K_through_price = "1"
                 if int(a['stck_prpr']) < int(rtn.leave_price):
@@ -69,7 +72,7 @@ def list(request):
                 {'id': rtn.id, 'acct_no': rtn.acct_no, 'code': rtn.code, 'name': rtn.name, 'K_through_price': rtn.K_through_price, 'D_leave_price': rtn.D_leave_price, 'K_resist_price': rtn.K_resist_price, 'D_support_price': rtn.D_support_price,
                  'K_trend_high_price': rtn.K_trend_high_price, 'D_trend_low_price': rtn.D_trend_low_price, 'stck_prpr': current_price,
                  'through_price': format(int(rtn.through_price), ',d'), 'leave_price': format(int(rtn.leave_price), ',d'), 'resist_price': format(int(rtn.resist_price), ',d'), 'support_price': format(int(rtn.support_price), ',d'),
-                 'trend_high_price': format(int(rtn.trend_high_price), ',d'), 'trend_low_price': format(int(rtn.trend_low_price), ',d'), 'buy_expect_sum': format(int(rtn.buy_expect_sum), ',d'), 'last_chg_date': rtn.last_chg_date})
+                 'trend_high_price': format(int(rtn.trend_high_price), ',d'), 'trend_low_price': format(int(rtn.trend_low_price), ',d'), 'buy_expect_sum': format(int(rtn.buy_expect_sum), ',d'), 'total_market_value': total_market_value, 'last_chg_date': rtn.last_chg_date})
 
     else:
         interest_item_rtn_list = []
@@ -114,12 +117,15 @@ def update(request):
         rtn.D_support_price = ""
         rtn.K_trend_high_price = ""
         rtn.D_trend_low_price = ""
+        total_market_value = 0
 
         if len(rtn.code) == 6:
             # 주식현재가 시세
             a = inquire_price(access_token, app_key, app_secret, rtn.code)
             current_price = format(int(a['stck_prpr']), ',d')
             print("현재가 : " + current_price)
+            total_market_value = format(int(a['hts_avls']), ',d')
+            print("시가총액 : " + total_market_value)
             if int(a['stck_prpr']) > int(rtn.through_price):
                 rtn.K_through_price = "1"
             if int(a['stck_prpr']) < int(rtn.leave_price):
@@ -154,7 +160,7 @@ def update(request):
             {'id': rtn.id, 'acct_no': rtn.acct_no, 'code': rtn.code, 'name': rtn.name, 'K_through_price': rtn.K_through_price, 'D_leave_price': rtn.D_leave_price, 'K_resist_price': rtn.K_resist_price, 'D_support_price': rtn.D_support_price,
              'K_trend_high_price': rtn.K_trend_high_price, 'D_trend_low_price': rtn.D_trend_low_price, 'stck_prpr': current_price,
              'through_price': format(int(rtn.through_price), ',d'), 'leave_price': format(int(rtn.leave_price), ',d'), 'resist_price': format(int(rtn.resist_price), ',d'), 'support_price': format(int(rtn.support_price), ',d'),
-             'trend_high_price': format(int(rtn.trend_high_price), ',d'), 'trend_low_price': format(int(rtn.trend_low_price), ',d'), 'buy_expect_sum': format(int(rtn.buy_expect_sum), ',d'), 'last_chg_date': rtn.last_chg_date})
+             'trend_high_price': format(int(rtn.trend_high_price), ',d'), 'trend_low_price': format(int(rtn.trend_low_price), ',d'), 'buy_expect_sum': format(int(rtn.buy_expect_sum), ',d'), 'total_market_value': total_market_value, 'last_chg_date': rtn.last_chg_date})
 
     return JsonResponse(interest_item_rtn_list, safe=False)
 

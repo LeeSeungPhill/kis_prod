@@ -101,6 +101,7 @@ def info(request):
         max_price = format(int(a['stck_mxpr']), ',d')   # 상한가
         min_price = format(int(a['stck_llam']), ',d')   # 하한가
         volumn = format(int(a['acml_vol']), ',d')       # 거래량
+        total_market_value = format(int(a['hts_avls']), ',d')  # 시가총액
     else:
         now_price = ""
         high_price = ""
@@ -109,12 +110,13 @@ def info(request):
         max_price = ""
         min_price = ""
         volumn = ""
+        total_market_value = ""
 
     stock_order_rtn_list = []
 
     stock_order_rtn_list.append(
         {'code': code, 'now_price': now_price, 'high_price': high_price, 'low_price': low_price,
-         'open_price': open_price, 'max_price': max_price, 'min_price': min_price, 'volumn': volumn})
+         'open_price': open_price, 'max_price': max_price, 'min_price': min_price, 'volumn': volumn, 'total_market_value': total_market_value})
 
     return JsonResponse(stock_order_rtn_list, safe=False)
     #data = {'columns': [Counts, Costs, ]}
