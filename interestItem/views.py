@@ -69,7 +69,7 @@ def list(request):
                 {'id': rtn.id, 'acct_no': rtn.acct_no, 'code': rtn.code, 'name': rtn.name, 'K_through_price': rtn.K_through_price, 'D_leave_price': rtn.D_leave_price, 'K_resist_price': rtn.K_resist_price, 'D_support_price': rtn.D_support_price,
                  'K_trend_high_price': rtn.K_trend_high_price, 'D_trend_low_price': rtn.D_trend_low_price, 'stck_prpr': current_price,
                  'through_price': format(int(rtn.through_price), ',d'), 'leave_price': format(int(rtn.leave_price), ',d'), 'resist_price': format(int(rtn.resist_price), ',d'), 'support_price': format(int(rtn.support_price), ',d'),
-                 'trend_high_price': format(int(rtn.trend_high_price), ',d'), 'trend_low_price': format(int(rtn.trend_low_price), ',d'), 'last_chg_date': rtn.last_chg_date})
+                 'trend_high_price': format(int(rtn.trend_high_price), ',d'), 'trend_low_price': format(int(rtn.trend_low_price), ',d'), 'buy_expect_sum': format(int(rtn.buy_expect_sum), ',d'), 'last_chg_date': rtn.last_chg_date})
 
     else:
         interest_item_rtn_list = []
@@ -88,6 +88,7 @@ def update(request):
     support_price = str(int(request.GET.get('support_price', '').replace(",", "")))
     trend_high_price = str(int(request.GET.get('trend_high_price', '').replace(",", "")))
     trend_low_price = str(int(request.GET.get('trend_low_price', '').replace(",", "")))
+    buy_expect_sum = str(int(request.GET.get('buy_expect_sum', '').replace(",", "")))
 
     interest_item.objects.filter(id=id).update(
                     through_price=int(through_price),
@@ -96,6 +97,7 @@ def update(request):
                     support_price=int(support_price),
                     trend_high_price=int(trend_high_price),
                     trend_low_price=int(trend_low_price),
+                    buy_expect_sum=int(buy_expect_sum),
                     last_chg_date=datetime.now()
                 )
 
@@ -152,7 +154,7 @@ def update(request):
             {'id': rtn.id, 'acct_no': rtn.acct_no, 'code': rtn.code, 'name': rtn.name, 'K_through_price': rtn.K_through_price, 'D_leave_price': rtn.D_leave_price, 'K_resist_price': rtn.K_resist_price, 'D_support_price': rtn.D_support_price,
              'K_trend_high_price': rtn.K_trend_high_price, 'D_trend_low_price': rtn.D_trend_low_price, 'stck_prpr': current_price,
              'through_price': format(int(rtn.through_price), ',d'), 'leave_price': format(int(rtn.leave_price), ',d'), 'resist_price': format(int(rtn.resist_price), ',d'), 'support_price': format(int(rtn.support_price), ',d'),
-             'trend_high_price': format(int(rtn.trend_high_price), ',d'), 'trend_low_price': format(int(rtn.trend_low_price), ',d'), 'last_chg_date': rtn.last_chg_date})
+             'trend_high_price': format(int(rtn.trend_high_price), ',d'), 'trend_low_price': format(int(rtn.trend_low_price), ',d'), 'buy_expect_sum': format(int(rtn.buy_expect_sum), ',d'), 'last_chg_date': rtn.last_chg_date})
 
     return JsonResponse(interest_item_rtn_list, safe=False)
 

@@ -132,12 +132,12 @@ def marketReg(request):
 
     # 코스피 미존재시 관심종목 생성
     if interest_item.objects.filter(acct_no=acct_no, code='0001').count() < 1:
-        s1 = interest_item.objects.create(acct_no=acct_no, code='0001', name='코스피', through_price=0, leave_price=0, resist_price=0, support_price=0, trend_high_price=0, trend_low_price=0, last_chg_date=datetime.now())
+        s1 = interest_item.objects.create(acct_no=acct_no, code='0001', name='코스피', through_price=0, leave_price=0, resist_price=0, support_price=0, trend_high_price=0, trend_low_price=0, buy_expect_sum=0, last_chg_date=datetime.now())
         s1.save()
 
     # 코스닥 미존재시 관심종목 생성
     if interest_item.objects.filter(acct_no=acct_no, code='1001').count() < 1:
-        s2 = interest_item.objects.create(acct_no=acct_no, code='1001', name='코스닥', through_price=0, leave_price=0, resist_price=0, support_price=0, trend_high_price=0, trend_low_price=0, last_chg_date=datetime.now())
+        s2 = interest_item.objects.create(acct_no=acct_no, code='1001', name='코스닥', through_price=0, leave_price=0, resist_price=0, support_price=0, trend_high_price=0, trend_low_price=0, buy_expect_sum=0, last_chg_date=datetime.now())
         s2.save()
 
     if trail_signal_recent.objects.count() > 0:

@@ -11,6 +11,7 @@ class interest_item(models.Model):
     support_price = models.IntegerField(null=True, blank=True)          # 지지가격
     trend_high_price = models.IntegerField(null=True, blank=True)       # 추세상단가격
     trend_low_price = models.IntegerField(null=True, blank=True)        # 추세하단가격
+    buy_expect_sum = models.IntegerField(null=True, blank=True)         # 매수예상금액
     last_chg_date = models.DateTimeField(auto_now=True)                 # 최종 변경일시
 
     class Meta:
