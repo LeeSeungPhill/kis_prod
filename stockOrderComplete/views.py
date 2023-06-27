@@ -175,7 +175,7 @@ def basic(request):
     except Exception as e:
         print('잘못된 인덱스입니다.', e)
 
-    order_complete_rtn = stock_order_complete.objects.filter(acct_no=acct_no, order_dt=datetime.now().strftime('%Y%m%d')).order_by('-order_no')
+    order_complete_rtn = stock_order_complete.objects.filter(acct_no=acct_no, order_dt=datetime.now().strftime('%Y%m%d')).order_by('-order_tmd')
 
     order_complete_rtn_list = []
     if len(order_complete_rtn) > 0:
