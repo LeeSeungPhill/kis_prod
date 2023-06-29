@@ -169,6 +169,30 @@ def balanceList(request):
                 if int(rtn.current_price) < int(rtn.end_loss_price):
                     rtn.D_loss_price = "1"
 
+                # 해당 링크는 한국거래소에서 상장법인목록을 엑셀로 다운로드하는 링크입니다.
+                # 다운로드와 동시에 Pandas에 excel 파일이 load가 되는 구조입니다.
+                stock_code = pd.read_html('http://kind.krx.co.kr/corpgeneral/corpList.do?method=download', header=0)[0]
+                # 필요한 것은 "회사명"과 "종목코드" 이므로 필요없는 column들은 제외
+                stock_code = stock_code[['회사명', '종목코드']]
+                # 한글 컬럼명을 영어로 변경
+                stock_code = stock_code.rename(columns={'회사명': 'company', '종목코드': 'code'})
+                # 종목코드가 6자리이기 때문에 6자리를 맞춰주기 위해 설정해줌
+                stock_code.code = stock_code.code.map('{:06d}'.format)
+
+                if len(stock_code[stock_code.company == rtn.name].values) > 0:
+                    code = stock_code[stock_code.company == rtn.name].code.values[0].strip()  ## strip() : 공백제거
+                else:
+                    code = ""
+
+                print("종목코드 : " + code)
+
+                a = inquire_price(access_token, app_key, app_secret, code)
+
+                prdy_vol_rate = format(round(float(a['prdy_vrss_vol_rate'])), ',d')
+                print("전일대비거래량 : " + str(prdy_vol_rate))
+                total_market_value = format(int(a['hts_avls']), ',d')
+                print("시가총액 : " + total_market_value)
+
                 stock_balance_rtn_list.append({'id': rtn.id, 'acct_no': rtn.acct_no, 'name': rtn.name,
                                                'purchase_price': format(int(rtn.purchase_price), ',d'),
                                                'purchase_amount': format(int(rtn.purchase_amount), ',d'),
@@ -183,6 +207,8 @@ def balanceList(request):
                                                'trading_plan': rtn.trading_plan, 'asset_num': rtn.asset_num,
                                                'sell_plan_sum': rtn.sell_plan_sum,
                                                'sell_plan_amount': rtn.sell_plan_amount,
+                                               'prdy_vol_rate': prdy_vol_rate,
+                                               'total_market_value': total_market_value,
                                                'last_chg_date': rtn.last_chg_date})
         else:
             stock_balance_rtn_list = []
@@ -194,6 +220,9 @@ def balanceList(request):
 
 def update(request):
     acct_no = request.GET.get('acct_no', '')
+    app_key = request.GET.get('app_key', '')
+    app_secret = request.GET.get('app_secret', '')
+    access_token = request.GET.get('access_token', '')
     id = request.GET.get('id', '')
     end_loss_price = str(int(request.GET.get('end_loss_price', '').replace(",", "")))
     end_target_price = str(int(request.GET.get('end_target_price', '').replace(",", "")))
@@ -223,6 +252,30 @@ def update(request):
         if int(rtn.current_price) < int(rtn.end_loss_price):
             rtn.D_loss_price = "1"
 
+        # 해당 링크는 한국거래소에서 상장법인목록을 엑셀로 다운로드하는 링크입니다.
+        # 다운로드와 동시에 Pandas에 excel 파일이 load가 되는 구조입니다.
+        stock_code = pd.read_html('http://kind.krx.co.kr/corpgeneral/corpList.do?method=download', header=0)[0]
+        # 필요한 것은 "회사명"과 "종목코드" 이므로 필요없는 column들은 제외
+        stock_code = stock_code[['회사명', '종목코드']]
+        # 한글 컬럼명을 영어로 변경
+        stock_code = stock_code.rename(columns={'회사명': 'company', '종목코드': 'code'})
+        # 종목코드가 6자리이기 때문에 6자리를 맞춰주기 위해 설정해줌
+        stock_code.code = stock_code.code.map('{:06d}'.format)
+
+        if len(stock_code[stock_code.company == rtn.name].values) > 0:
+            code = stock_code[stock_code.company == rtn.name].code.values[0].strip()  ## strip() : 공백제거
+        else:
+            code = ""
+
+        print("종목코드 : " + code)
+
+        a = inquire_price(access_token, app_key, app_secret, code)
+
+        prdy_vol_rate = format(round(float(a['prdy_vrss_vol_rate'])), ',d')
+        print("전일대비거래량 : " + str(prdy_vol_rate))
+        total_market_value = format(int(a['hts_avls']), ',d')
+        print("시가총액 : " + total_market_value)
+
         stock_balance_rtn_list.append(
             {'id': rtn.id, 'acct_no': rtn.acct_no, 'name': rtn.name,
              'purchase_price': format(int(rtn.purchase_price), ',d'),
@@ -235,6 +288,8 @@ def update(request):
              'end_target_price': format(int(rtn.end_target_price), ',d'),
              'trading_plan': rtn.trading_plan, 'asset_num': rtn.asset_num,
              'sell_plan_sum': rtn.sell_plan_sum, 'sell_plan_amount': rtn.sell_plan_amount,
+             'prdy_vol_rate': prdy_vol_rate,
+             'total_market_value': total_market_value,
              'last_chg_date': rtn.last_chg_date})
 
     return JsonResponse(stock_balance_rtn_list, safe=False)
@@ -576,3 +631,24 @@ def inquire_time_marketchartprice(access_token, app_key, app_secret, market):
     ar = resp.APIResp(res)
 
     return ar.getBody().output2
+
+# 주식현재가 시세
+def inquire_price(access_token, app_key, app_secret, code):
+    #URL_BASE = "https://openapivts.koreainvestment.com:29443"  # 모의투자서비스
+    URL_BASE = "https://openapi.koreainvestment.com:9443"       # 실전서비스
+
+    headers = {"Content-Type": "application/json",
+               "authorization": f"Bearer {access_token}",
+               "appKey": app_key,
+               "appSecret": app_secret,
+               "tr_id": "FHKST01010100"}
+    params = {
+            'FID_COND_MRKT_DIV_CODE': "J",
+            'FID_INPUT_ISCD': code
+    }
+    PATH = "uapi/domestic-stock/v1/quotations/inquire-price"
+    URL = f"{URL_BASE}/{PATH}"
+    res = requests.get(URL, headers=headers, params=params, verify=False)
+    ar = resp.APIResp(res)
+
+    return ar.getBody().output

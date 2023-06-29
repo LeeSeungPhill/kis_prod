@@ -36,6 +36,8 @@ def list(request):
                 a = inquire_price(access_token, app_key, app_secret, rtn.code)
                 current_price = format(int(a['stck_prpr']), ',d')
                 print("현재가 : "+current_price)
+                prdy_vol_rate = format(round(float(a['prdy_vrss_vol_rate'])), ',d')
+                print("전일대비거래량 : " + str(prdy_vol_rate))
                 total_market_value = format(int(a['hts_avls']), ',d')
                 print("시가총액 : " + total_market_value)
                 if int(a['stck_prpr']) > int(rtn.through_price):
@@ -55,6 +57,8 @@ def list(request):
                 b = inquire_daily_indexchartprice(access_token, app_key, app_secret, rtn.code, today)
                 current_price = '{:0,.2f}'.format(float(b['bstp_nmix_prpr']), ',f')
                 print("현재가 : " + current_price)
+                prdy_vol_rate = format(round(int(b['acml_vol']) / int(b['prdy_vol']) * 100), ',d')
+                print("전일대비거래량 : " + str(prdy_vol_rate))
                 if math.ceil(float(b['bstp_nmix_prpr'])) > int(rtn.through_price):
                     rtn.K_through_price = "1"
                 if math.ceil(float(b['bstp_nmix_prpr'])) < int(rtn.leave_price):
@@ -70,7 +74,7 @@ def list(request):
 
             interest_item_rtn_list.append(
                 {'id': rtn.id, 'acct_no': rtn.acct_no, 'code': rtn.code, 'name': rtn.name, 'K_through_price': rtn.K_through_price, 'D_leave_price': rtn.D_leave_price, 'K_resist_price': rtn.K_resist_price, 'D_support_price': rtn.D_support_price,
-                 'K_trend_high_price': rtn.K_trend_high_price, 'D_trend_low_price': rtn.D_trend_low_price, 'stck_prpr': current_price,
+                 'K_trend_high_price': rtn.K_trend_high_price, 'D_trend_low_price': rtn.D_trend_low_price, 'stck_prpr': current_price, 'prdy_vol_rate': str(prdy_vol_rate),
                  'through_price': format(int(rtn.through_price), ',d'), 'leave_price': format(int(rtn.leave_price), ',d'), 'resist_price': format(int(rtn.resist_price), ',d'), 'support_price': format(int(rtn.support_price), ',d'),
                  'trend_high_price': format(int(rtn.trend_high_price), ',d'), 'trend_low_price': format(int(rtn.trend_low_price), ',d'), 'buy_expect_sum': format(int(rtn.buy_expect_sum), ',d'), 'total_market_value': total_market_value, 'last_chg_date': rtn.last_chg_date})
 
@@ -124,6 +128,8 @@ def update(request):
             a = inquire_price(access_token, app_key, app_secret, rtn.code)
             current_price = format(int(a['stck_prpr']), ',d')
             print("현재가 : " + current_price)
+            prdy_vol_rate = format(round(float(a['prdy_vrss_vol_rate'])), ',d')
+            print("전일대비거래량 : " + str(prdy_vol_rate))
             total_market_value = format(int(a['hts_avls']), ',d')
             print("시가총액 : " + total_market_value)
             if int(a['stck_prpr']) > int(rtn.through_price):
@@ -143,6 +149,8 @@ def update(request):
             b = inquire_daily_indexchartprice(access_token, app_key, app_secret, rtn.code, today)
             current_price = '{:0,.2f}'.format(float(b['bstp_nmix_prpr']), ',f')
             print("현재가 : " + current_price)
+            prdy_vol_rate = format(round(int(b['acml_vol']) / int(b['prdy_vol']) * 100), ',d')
+            print("전일대비거래량 : " + str(prdy_vol_rate))
             if math.ceil(float(b['bstp_nmix_prpr'])) > int(rtn.through_price):
                 rtn.K_through_price = "1"
             if math.ceil(float(b['bstp_nmix_prpr'])) < int(rtn.leave_price):
@@ -158,7 +166,7 @@ def update(request):
 
         interest_item_rtn_list.append(
             {'id': rtn.id, 'acct_no': rtn.acct_no, 'code': rtn.code, 'name': rtn.name, 'K_through_price': rtn.K_through_price, 'D_leave_price': rtn.D_leave_price, 'K_resist_price': rtn.K_resist_price, 'D_support_price': rtn.D_support_price,
-             'K_trend_high_price': rtn.K_trend_high_price, 'D_trend_low_price': rtn.D_trend_low_price, 'stck_prpr': current_price,
+             'K_trend_high_price': rtn.K_trend_high_price, 'D_trend_low_price': rtn.D_trend_low_price, 'stck_prpr': current_price, 'prdy_vol_rate': str(prdy_vol_rate),
              'through_price': format(int(rtn.through_price), ',d'), 'leave_price': format(int(rtn.leave_price), ',d'), 'resist_price': format(int(rtn.resist_price), ',d'), 'support_price': format(int(rtn.support_price), ',d'),
              'trend_high_price': format(int(rtn.trend_high_price), ',d'), 'trend_low_price': format(int(rtn.trend_low_price), ',d'), 'buy_expect_sum': format(int(rtn.buy_expect_sum), ',d'), 'total_market_value': total_market_value, 'last_chg_date': rtn.last_chg_date})
 
