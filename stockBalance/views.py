@@ -80,28 +80,20 @@ def balanceList(request):
         if stock_fund_mng.objects.filter(acct_no=acct_no).count() > 0:
 
             if ar.isOK() and output1:
-                tdf = pd.DataFrame(output1)
-                tdf.set_index('pdno', inplace=True)
-                cf1 = ['prdt_name', 'thdt_buyqty', 'thdt_sll_qty', 'hldg_qty', 'ord_psbl_qty', 'pchs_avg_pric',
-                       'pchs_amt', 'evlu_amt', 'evlu_pfls_amt', 'evlu_pfls_rt', 'prpr', 'bfdy_cprs_icdc', 'fltt_rt']
-                cf2 = ['종목명', '금일매수수량', '금일매도수량', '보유수량', '매도가능수량', '매입단가', '매입금액', '평가금액', '평가손익금액', '수익율', '현재가',
-                       '전일대비', '등락']
-                tdf = tdf[cf1]
-                tdf[cf1[1:]] = tdf[cf1[1:]].apply(pd.to_numeric)
-                ren_dict = dict(zip(cf1, cf2))
-                e = tdf.rename(columns=ren_dict)
+                balance = pd.DataFrame(output1)
 
                 stock_balance.objects.filter(acct_no=acct_no, proc_yn="Y").update(proc_yn="N", last_chg_date=datetime.now())
 
-                for i, name in enumerate(e.index):
-                    e_name = e['종목명'][i]
-                    e_purchase_price = int(e['매입단가'][i])
-                    e_purchase_amount = int(e['보유수량'][i])
-                    e_purchase_sum = int(e['매입금액'][i])
-                    e_current_price = int(e['현재가'][i])
-                    e_eval_sum = int(e['평가금액'][i])
-                    e_earnings_rate = e['수익율'][i]
-                    e_valuation_sum = int(e['평가손익금액'][i])
+                for i, name in enumerate(balance.index):
+                    e_code = balance['pdno'][i]
+                    e_name = balance['prdt_name'][i]
+                    e_purchase_price = balance['pchs_avg_pric'][i]
+                    e_purchase_amount = int(balance['hldg_qty'][i])
+                    e_purchase_sum = int(balance['pchs_amt'][i])
+                    e_current_price = int(balance['prpr'][i])
+                    e_eval_sum = int(balance['evlu_amt'][i])
+                    e_earnings_rate = balance['evlu_pfls_rt'][i]
+                    e_valuation_sum = int(balance['evlu_pfls_amt'][i])
 
                     # 자산번호의 매도예정자금이 존재하는 경우, 보유종목 비중별 매도가능금액 및 매도가능수량 계산
                     if stock_fund_mng_info.sell_plan_amt > 0:
@@ -115,8 +107,9 @@ def balanceList(request):
                         e_sell_plan_amount = e_sell_plan_sum / e_current_price
 
                         stock_balance.objects.update_or_create(
-                            acct_no=acct_no, name=e_name, asset_num=stock_fund_mng_info.asset_num,
+                            acct_no=acct_no, code=e_code, asset_num=stock_fund_mng_info.asset_num,
                             defaults={'acct_no': acct_no,  # 계좌번호
+                                      'code': e_code,  # 종목코드
                                       'name': e_name,  # 종목명
                                       'purchase_price': e_purchase_price,  # 매입가
                                       'purchase_amount': e_purchase_amount,  # 보유수량
@@ -134,8 +127,9 @@ def balanceList(request):
                         )
                     else:
                         stock_balance.objects.update_or_create(
-                            acct_no=acct_no, name=e_name, asset_num=stock_fund_mng_info.asset_num,
+                            acct_no=acct_no, code=e_code, asset_num=stock_fund_mng_info.asset_num,
                             defaults={'acct_no': acct_no,  # 계좌번호
+                                      'code': e_code,  # 종목코드
                                       'name': e_name,  # 종목명
                                       'purchase_price': e_purchase_price,  # 매입가
                                       'purchase_amount': e_purchase_amount,  # 보유수량
@@ -156,44 +150,37 @@ def balanceList(request):
             stock_balance_rtn_list = []
 
             for index, rtn in enumerate(stock_balance_rtn, start=1):
+                rtn.K_sign_resist_price = ""
+                rtn.D_sign_support_price = ""
                 rtn.K_target_price = ""
                 rtn.D_loss_price = ""
 
+                if rtn.sign_resist_price == None:
+                    rtn.sign_resist_price = "0"
+                if rtn.sign_support_price == None:
+                    rtn.sign_support_price = "0"
+                if rtn.end_target_price == None:
+                   rtn.end_target_price = "0"
                 if rtn.end_loss_price == None:
                     rtn.end_loss_price = "0"
-                if rtn.end_target_price == None:
-                    rtn.end_target_price = "0"
 
+                if int(rtn.current_price) > int(rtn.sign_resist_price):
+                    rtn.K_sign_resist_price = "1"
+                if int(rtn.current_price) < int(rtn.sign_support_price):
+                    rtn.D_sign_support_price = "1"
                 if int(rtn.current_price) > int(rtn.end_target_price):
                     rtn.K_target_price = "1"
                 if int(rtn.current_price) < int(rtn.end_loss_price):
                     rtn.D_loss_price = "1"
 
-                # 해당 링크는 한국거래소에서 상장법인목록을 엑셀로 다운로드하는 링크입니다.
-                # 다운로드와 동시에 Pandas에 excel 파일이 load가 되는 구조입니다.
-                stock_code = pd.read_html('http://kind.krx.co.kr/corpgeneral/corpList.do?method=download', header=0)[0]
-                # 필요한 것은 "회사명"과 "종목코드" 이므로 필요없는 column들은 제외
-                stock_code = stock_code[['회사명', '종목코드']]
-                # 한글 컬럼명을 영어로 변경
-                stock_code = stock_code.rename(columns={'회사명': 'company', '종목코드': 'code'})
-                # 종목코드가 6자리이기 때문에 6자리를 맞춰주기 위해 설정해줌
-                stock_code.code = stock_code.code.map('{:06d}'.format)
-
-                if len(stock_code[stock_code.company == rtn.name].values) > 0:
-                    code = stock_code[stock_code.company == rtn.name].code.values[0].strip()  ## strip() : 공백제거
-                else:
-                    code = ""
-
-                print("종목코드 : " + code)
-
-                a = inquire_price(access_token, app_key, app_secret, code)
+                a = inquire_price(access_token, app_key, app_secret, rtn.code)
 
                 prdy_vol_rate = format(round(float(a['prdy_vrss_vol_rate'])), ',d')
                 print("전일대비거래량 : " + str(prdy_vol_rate))
                 total_market_value = format(int(a['hts_avls']), ',d')
                 print("시가총액 : " + total_market_value)
 
-                stock_balance_rtn_list.append({'id': rtn.id, 'acct_no': rtn.acct_no, 'name': rtn.name,
+                stock_balance_rtn_list.append({'id': rtn.id, 'acct_no': rtn.acct_no, 'code': rtn.code, 'name': rtn.name,
                                                'purchase_price': format(int(rtn.purchase_price), ',d'),
                                                'purchase_amount': format(int(rtn.purchase_amount), ',d'),
                                                'purchase_sum': format(int(rtn.purchase_sum), ',d'),
@@ -201,6 +188,9 @@ def balanceList(request):
                                                'eval_sum': format(int(rtn.eval_sum), ',d'),
                                                'earnings_rate': rtn.earnings_rate,
                                                'valuation_sum': format(int(rtn.valuation_sum), ',d'),
+                                               'K_sign_resist_price': rtn.K_sign_resist_price, 'D_sign_support_price': rtn.D_sign_support_price,
+                                               'sign_resist_price': format(int(rtn.sign_resist_price), ',d'),
+                                               'sign_support_price': format(int(rtn.sign_support_price), ',d'),
                                                'K_target_price': rtn.K_target_price, 'D_loss_price': rtn.D_loss_price,
                                                'end_loss_price': format(int(rtn.end_loss_price), ',d'),
                                                'end_target_price': format(int(rtn.end_target_price), ',d'),
@@ -224,11 +214,15 @@ def update(request):
     app_secret = request.GET.get('app_secret', '')
     access_token = request.GET.get('access_token', '')
     id = request.GET.get('id', '')
-    end_loss_price = str(int(request.GET.get('end_loss_price', '').replace(",", "")))
+    sign_resist_price = str(int(request.GET.get('sign_resist_price', '').replace(",", "")))
+    sign_support_price = str(int(request.GET.get('sign_support_price', '').replace(",", "")))
     end_target_price = str(int(request.GET.get('end_target_price', '').replace(",", "")))
+    end_loss_price = str(int(request.GET.get('end_loss_price', '').replace(",", "")))
     trading_plan = request.GET.get('trading_plan', '')
 
     stock_balance.objects.filter(id=id).update(
+        sign_resist_price=int(sign_resist_price),
+        sign_support_price=int(sign_support_price),
         end_loss_price=int(end_loss_price),
         end_target_price=int(end_target_price),
         trading_plan=trading_plan,
@@ -239,37 +233,30 @@ def update(request):
     stock_balance_rtn_list = []
 
     for index, rtn in enumerate(stock_balance_rtn, start=1):
+        rtn.K_sign_resist_price = ""
+        rtn.D_sign_support_price = ""
         rtn.K_target_price = ""
         rtn.D_loss_price = ""
 
-        if rtn.end_loss_price == None:
-            rtn.end_loss_price = "0"
+        if rtn.sign_resist_price == None:
+            rtn.sign_resist_price = "0"
+        if rtn.sign_support_price == None:
+            rtn.sign_support_price = "0"
         if rtn.end_target_price == None:
             rtn.end_target_price = "0"
+        if rtn.end_loss_price == None:
+            rtn.end_loss_price = "0"
 
+        if int(rtn.current_price) > int(rtn.sign_resist_price):
+            rtn.K_sign_resist_price = "1"
+        if int(rtn.current_price) < int(rtn.sign_support_price):
+            rtn.D_sign_support_price = "1"
         if int(rtn.current_price) > int(rtn.end_target_price):
             rtn.K_target_price = "1"
         if int(rtn.current_price) < int(rtn.end_loss_price):
             rtn.D_loss_price = "1"
 
-        # 해당 링크는 한국거래소에서 상장법인목록을 엑셀로 다운로드하는 링크입니다.
-        # 다운로드와 동시에 Pandas에 excel 파일이 load가 되는 구조입니다.
-        stock_code = pd.read_html('http://kind.krx.co.kr/corpgeneral/corpList.do?method=download', header=0)[0]
-        # 필요한 것은 "회사명"과 "종목코드" 이므로 필요없는 column들은 제외
-        stock_code = stock_code[['회사명', '종목코드']]
-        # 한글 컬럼명을 영어로 변경
-        stock_code = stock_code.rename(columns={'회사명': 'company', '종목코드': 'code'})
-        # 종목코드가 6자리이기 때문에 6자리를 맞춰주기 위해 설정해줌
-        stock_code.code = stock_code.code.map('{:06d}'.format)
-
-        if len(stock_code[stock_code.company == rtn.name].values) > 0:
-            code = stock_code[stock_code.company == rtn.name].code.values[0].strip()  ## strip() : 공백제거
-        else:
-            code = ""
-
-        print("종목코드 : " + code)
-
-        a = inquire_price(access_token, app_key, app_secret, code)
+        a = inquire_price(access_token, app_key, app_secret, rtn.code)
 
         prdy_vol_rate = format(round(float(a['prdy_vrss_vol_rate'])), ',d')
         print("전일대비거래량 : " + str(prdy_vol_rate))
@@ -277,12 +264,15 @@ def update(request):
         print("시가총액 : " + total_market_value)
 
         stock_balance_rtn_list.append(
-            {'id': rtn.id, 'acct_no': rtn.acct_no, 'name': rtn.name,
+            {'id': rtn.id, 'acct_no': rtn.acct_no, 'code': rtn.code, 'name': rtn.name,
              'purchase_price': format(int(rtn.purchase_price), ',d'),
              'purchase_amount': format(int(rtn.purchase_amount), ',d'),
              'purchase_sum': format(int(rtn.purchase_sum), ',d'),
              'current_price': format(int(rtn.current_price), ',d'), 'eval_sum': format(int(rtn.eval_sum), ',d'),
              'earnings_rate': rtn.earnings_rate, 'valuation_sum': format(int(rtn.valuation_sum), ',d'),
+             'K_sign_resist_price': rtn.K_sign_resist_price, 'D_sign_support_price': rtn.D_sign_support_price,
+             'sign_resist_price': format(int(rtn.sign_resist_price), ',d'),
+             'sign_support_price': format(int(rtn.sign_support_price), ',d'),
              'K_target_price': rtn.K_target_price, 'D_loss_price': rtn.D_loss_price,
              'end_loss_price': format(int(rtn.end_loss_price), ',d'),
              'end_target_price': format(int(rtn.end_target_price), ',d'),
