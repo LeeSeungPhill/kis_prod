@@ -146,7 +146,7 @@ def balanceList(request):
                                       }
                         )
 
-            stock_balance_rtn = stock_balance.objects.filter(acct_no=acct_no, proc_yn="Y").order_by('-earnings_rate')
+            stock_balance_rtn = stock_balance.objects.filter(acct_no=acct_no, proc_yn="Y").order_by('code')
             stock_balance_rtn_list = []
 
             for index, rtn in enumerate(stock_balance_rtn, start=1):
@@ -229,7 +229,7 @@ def update(request):
         last_chg_date=datetime.now()
     )
 
-    stock_balance_rtn = stock_balance.objects.filter(acct_no=acct_no, proc_yn="Y").order_by('-earnings_rate')
+    stock_balance_rtn = stock_balance.objects.filter(acct_no=acct_no, proc_yn="Y").order_by('code')
     stock_balance_rtn_list = []
 
     for index, rtn in enumerate(stock_balance_rtn, start=1):

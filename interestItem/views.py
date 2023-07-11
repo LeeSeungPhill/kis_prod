@@ -16,7 +16,7 @@ def list(request):
 
     if interest_item.objects.filter(acct_no=acct_no).count() > 0:
 
-        interest_item_rtn = interest_item.objects.filter(acct_no=acct_no).order_by('-last_chg_date')
+        interest_item_rtn = interest_item.objects.filter(acct_no=acct_no).order_by('code')
         interest_item_rtn_list = []
 
         today = datetime.now().strftime("%Y%m%d")
@@ -108,7 +108,7 @@ def update(request):
                     last_chg_date=datetime.now()
                 )
 
-    interest_item_rtn = interest_item.objects.filter(acct_no=acct_no).order_by('-last_chg_date')
+    interest_item_rtn = interest_item.objects.filter(acct_no=acct_no).order_by('code')
     interest_item_rtn_list = []
 
     today = datetime.now().strftime("%Y%m%d")
