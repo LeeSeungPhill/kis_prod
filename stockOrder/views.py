@@ -765,7 +765,7 @@ def inquire_psbl_order(access_token, app_key, app_secret, acct_no):
     res = requests.get(URL, headers=headers, params=params, verify=False)
     ar = resp.APIResp(res)
 
-    return ar.getBody().output['ord_psbl_cash']
+    return ar.getBody().output['nrcvb_buy_amt']
 
 # 주식주문(현금)
 def order_cash(buy_flag, access_token, app_key, app_secret, acct_no, stock_code, ord_dvsn, order_qty, order_price):
