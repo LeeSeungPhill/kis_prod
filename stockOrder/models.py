@@ -38,3 +38,23 @@ class sub_total(models.Model):
     class Meta:
         managed = False
         db_table = 'sub_total'
+
+class stock_search_form(models.Model):
+    search_day = models.CharField(max_length=8)
+    search_time = models.CharField(max_length=4)
+    search_name = models.CharField(max_length=20)
+    code = models.CharField(max_length=6)
+    name = models.CharField(max_length=30)
+    low_price = models.IntegerField(null=True, blank=True)
+    high_price = models.IntegerField(null=True, blank=True)
+    current_price = models.IntegerField(null=True, blank=True)
+    day_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    volumn = models.IntegerField(null=True, blank=True)
+    volumn_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    market_total_sum = models.IntegerField(null=True, blank=True)
+    cdate = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        managed = False
+        db_table = 'stock_search_form'
+        unique_together = (('search_day', 'search_name', 'code'),)        

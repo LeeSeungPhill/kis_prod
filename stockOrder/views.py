@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from .models import stock_order, sub_total
+from .models import stock_order, sub_total, stock_search_form
 from stockBalance.models import stock_balance
 from stockFundMng.models import stock_fund_mng
 from stockMarketMng.models import stock_market_mng
@@ -17,6 +17,7 @@ from django.shortcuts import render
 import os
 import time
 from pykrx import stock
+import math
 
 #URL_BASE = "https://openapivts.koreainvestment.com:29443"   # 모의투자서비스
 URL_BASE = "https://openapi.koreainvestment.com:9443"       # 실전서비스
@@ -994,3 +995,123 @@ def get_stochastic(df, n=15, m=5, t=3):
     df = df.assign(kdj_k=kdj_k, kdj_d=kdj_d, kdj_j=kdj_j).dropna()
 
     return df
+
+def stockSearch(request):
+    search_day = request.GET.get('search_day', '')
+    search_name = request.GET.get('search_name', '')
+    name = request.GET.get('name', '')
+
+    stockSearch_info = stock_search_form.objects.filter(search_day=search_day, search_name=search_name, name__startswith=name).order_by('search_time')
+
+    stockSearch_info_rtn_list = []
+    if len(stockSearch_info) > 0:
+
+        for i, rtn in enumerate(stockSearch_info, start=1):
+
+            stockSearch_info_rtn_list.append({'search_dtm': rtn.search_day + rtn.search_time,
+                                               'search_name': rtn.search_name, 
+                                               'code': rtn.code, 'name': rtn.name, 
+                                               'current_price': format(rtn.current_price, ',d'), 
+                                               'high_price': format(rtn.high_price, ',d'), 
+                                               'low_price': format(rtn.low_price, ',d'), 
+                                               'day_rate': format(int(rtn.day_rate), ',d'), 
+                                               'volumn': format(rtn.volumn, ',d'), 
+                                               'volumn_rate': format(int(rtn.volumn_rate), ',d'), 
+                                               'market_total_sum': format(rtn.market_total_sum, ',d')})
+    else:
+        stockSearch_info_rtn_list = []
+
+    return JsonResponse(stockSearch_info_rtn_list, safe=False)
+
+def runStockSearch(request):
+    app_key = request.GET.get('app_key', '')
+    app_secret = request.GET.get('app_secret', '')
+    access_token = request.GET.get('access_token', '')
+    search_choice = request.GET.get('search_choice', '')
+
+    today = datetime.now().strftime("%Y%m%d")
+    time = datetime.now().strftime("%H%M")
+
+    # 조건검색명
+    if search_choice == '0':
+        search_name = "거래폭발"
+    elif search_choice == '1':
+        search_name = "단기추세"
+    elif search_choice == '2':
+        search_name = "투자혁명"
+
+    def inquire_search_result(access_token, app_key, app_secret, id, seq):
+
+        headers = {"Content-Type": "application/json",
+                   "authorization": f"Bearer {access_token}",
+                   "appKey": app_key,
+                   "appSecret": app_secret,
+                   "tr_id": "HHKST03900400",
+                   "custtype": "P"}
+        params = {
+            'user_id': id,
+            'seq': seq
+        }
+        PATH = "/uapi/domestic-stock/v1/quotations/psearch-result"
+        URL = f"{URL_BASE}/{PATH}"
+        res = requests.get(URL, headers=headers, params=params, verify=False)
+        ar = resp.APIResp(res)
+        # ar.printAll()
+        return ar.getBody().output2
+
+    item_search = inquire_search_result(access_token, app_key, app_secret, 'phills2', search_choice)  # 종목조건검색 조회
+
+    number = 0
+
+    for i in item_search:
+
+        number = number + 1
+
+        print("순위 : " + str(number))
+        print("종목코드 : " + i['code'])
+        print("종목명 : " + i['name'])
+        print("현재가 : " + format(math.ceil(float(i['price'])), ',d'))
+        print("등락률 : " + str(round(float(i['chgrate']), 2)))
+        print("거래량 : " + format(math.ceil(float(i['acml_vol'])), ',d'))
+        print("전일대비 : " + str(round(float(i['chgrate2']), 2)))
+        print("고가 : " + format(math.ceil(float(i['high'])), ',d'))
+        print("저가 : " + format(math.ceil(float(i['low'])), ',d'))
+        print("시가총액 : " + format(int(round(float(i['stotprice']))), ',d'))
+
+        stock_search_form.objects.update_or_create(search_day=today, code=i['code'], search_name=search_name,
+            defaults={'search_day':today,
+                      'search_time':time,
+                      'search_name':search_name,
+                      'code':i['code'],
+                      'name':i['name'],
+                      'low_price':math.ceil(float(i['low'])),
+                      'high_price':math.ceil(float(i['high'])),
+                      'current_price':math.ceil(float(i['price'])),
+                      'day_rate':int(round(float(i['chgrate']), 2)),
+                      'volumn':math.ceil(float(i['acml_vol'])),
+                      'volumn_rate':int(round(float(i['chgrate2']), 2)),
+                      'market_total_sum':int(round(float(i['stotprice']))),
+                      'cdate':datetime.now()
+                     }
+        )
+
+    stockSearch_info = stock_search_form.objects.filter(search_day=today, search_name=search_name).order_by('search_time')
+
+    stockSearch_info_rtn_list = []
+    if len(stockSearch_info) > 0:
+
+        for i, rtn in enumerate(stockSearch_info, start=1):
+            stockSearch_info_rtn_list.append({'search_dtm': rtn.search_day + rtn.search_time,
+                                              'search_name': rtn.search_name,
+                                              'code': rtn.code, 'name': rtn.name,
+                                              'current_price': format(rtn.current_price, ',d'),
+                                              'high_price': format(rtn.high_price, ',d'),
+                                              'low_price': format(rtn.low_price, ',d'),
+                                              'day_rate': format(int(rtn.day_rate), ',d'),
+                                              'volumn': format(rtn.volumn, ',d'),
+                                              'volumn_rate': format(int(rtn.volumn_rate), ',d'),
+                                              'market_total_sum': format(rtn.market_total_sum, ',d')})
+    else:
+        stockSearch_info_rtn_list = []
+
+    return JsonResponse(stockSearch_info_rtn_list, safe=False)
