@@ -95,15 +95,15 @@ def info(request):
         # 주식현재가 시세
         a = inquire_price(access_token, app_key, app_secret, code)
 
-        now_price = format(int(a['stck_prpr']), ',d')   # 현재가
-        high_price = format(int(a['stck_hgpr']), ',d')  # 고가
-        low_price = format(int(a['stck_lwpr']), ',d')   # 저가
-        open_price = format(int(a['stck_oprc']), ',d')  # 시가
-        max_price = format(int(a['stck_mxpr']), ',d')   # 상한가
-        min_price = format(int(a['stck_llam']), ',d')   # 하한가
-        volumn = format(int(a['acml_vol']), ',d')       # 거래량
-        total_market_value = format(int(a['hts_avls']), ',d')  # 시가총액
-        prdy_vol_rate = format(round(float(a['prdy_vrss_vol_rate'])), ',d')  # 전일대비거래량
+        now_price = format(int(a['stck_prpr']), ',d') + "원"                         # 현재가
+        high_price = format(int(a['stck_hgpr']), ',d') + "원"                        # 고가
+        low_price = format(int(a['stck_lwpr']), ',d') + "원"                         # 저가
+        open_price = format(int(a['stck_oprc']), ',d') + "원"                        # 시가
+        max_price = format(int(a['stck_mxpr']), ',d') + "원"                         # 상한가
+        min_price = format(int(a['stck_llam']), ',d') + "원"                         # 하한가
+        volumn = format(int(a['acml_vol']), ',d') + "주"                             # 거래량
+        total_market_value = format(int(a['hts_avls']), ',d')                       # 시가총액
+        prdy_vol_rate = format(round(float(a['prdy_vrss_vol_rate'])), ',d') + "%"   # 전일대비거래량
     else:
         now_price = ""
         high_price = ""
