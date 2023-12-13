@@ -1007,17 +1007,16 @@ def stockSearch(request):
     if len(stockSearch_info) > 0:
 
         for i, rtn in enumerate(stockSearch_info, start=1):
-
-            stockSearch_info_rtn_list.append({'search_dtm': rtn.search_day + rtn.search_time,
+            stockSearch_info_rtn_list.append({'search_dtm': rtn.search_day + " " + rtn.search_time,
                                                'search_name': rtn.search_name, 
                                                'code': rtn.code, 'name': rtn.name, 
-                                               'current_price': format(rtn.current_price, ',d'), 
-                                               'high_price': format(rtn.high_price, ',d'), 
-                                               'low_price': format(rtn.low_price, ',d'), 
-                                               'day_rate': format(int(rtn.day_rate), ',d'), 
-                                               'volumn': format(rtn.volumn, ',d'), 
-                                               'volumn_rate': format(int(rtn.volumn_rate), ',d'), 
-                                               'market_total_sum': format(rtn.market_total_sum, ',d')})
+                                               'current_price': rtn.current_price,
+                                               'high_price': rtn.high_price,
+                                               'low_price': rtn.low_price,
+                                               'day_rate': float(rtn.day_rate),
+                                               'volumn': rtn.volumn,
+                                               'volumn_rate': float(rtn.volumn_rate),
+                                               'market_total_sum': rtn.market_total_sum})
     else:
         stockSearch_info_rtn_list = []
 
@@ -1061,23 +1060,7 @@ def runStockSearch(request):
 
     item_search = inquire_search_result(access_token, app_key, app_secret, 'phills2', search_choice)  # 종목조건검색 조회
 
-    number = 0
-
     for i in item_search:
-
-        number = number + 1
-
-        print("순위 : " + str(number))
-        print("종목코드 : " + i['code'])
-        print("종목명 : " + i['name'])
-        print("현재가 : " + format(math.ceil(float(i['price'])), ',d'))
-        print("등락률 : " + str(round(float(i['chgrate']), 2)))
-        print("거래량 : " + format(math.ceil(float(i['acml_vol'])), ',d'))
-        print("전일대비 : " + str(round(float(i['chgrate2']), 2)))
-        print("고가 : " + format(math.ceil(float(i['high'])), ',d'))
-        print("저가 : " + format(math.ceil(float(i['low'])), ',d'))
-        print("시가총액 : " + format(int(round(float(i['stotprice']))), ',d'))
-
         stock_search_form.objects.update_or_create(search_day=today, code=i['code'], search_name=search_name,
             defaults={'search_day':today,
                       'search_time':time,
@@ -1087,9 +1070,9 @@ def runStockSearch(request):
                       'low_price':math.ceil(float(i['low'])),
                       'high_price':math.ceil(float(i['high'])),
                       'current_price':math.ceil(float(i['price'])),
-                      'day_rate':int(round(float(i['chgrate']), 2)),
+                      'day_rate':i['chgrate'],
                       'volumn':math.ceil(float(i['acml_vol'])),
-                      'volumn_rate':int(round(float(i['chgrate2']), 2)),
+                      'volumn_rate':i['chgrate2'],
                       'market_total_sum':int(round(float(i['stotprice']))),
                       'cdate':datetime.now()
                      }
@@ -1101,16 +1084,16 @@ def runStockSearch(request):
     if len(stockSearch_info) > 0:
 
         for i, rtn in enumerate(stockSearch_info, start=1):
-            stockSearch_info_rtn_list.append({'search_dtm': rtn.search_day + rtn.search_time,
-                                              'search_name': rtn.search_name,
-                                              'code': rtn.code, 'name': rtn.name,
-                                              'current_price': format(rtn.current_price, ',d'),
-                                              'high_price': format(rtn.high_price, ',d'),
-                                              'low_price': format(rtn.low_price, ',d'),
-                                              'day_rate': format(int(rtn.day_rate), ',d'),
-                                              'volumn': format(rtn.volumn, ',d'),
-                                              'volumn_rate': format(int(rtn.volumn_rate), ',d'),
-                                              'market_total_sum': format(rtn.market_total_sum, ',d')})
+            stockSearch_info_rtn_list.append({'search_dtm': rtn.search_day + " " + rtn.search_time,
+                                               'search_name': rtn.search_name, 
+                                               'code': rtn.code, 'name': rtn.name, 
+                                               'current_price': rtn.current_price,
+                                               'high_price': rtn.high_price,
+                                               'low_price': rtn.low_price,
+                                               'day_rate': float(rtn.day_rate),
+                                               'volumn': rtn.volumn,
+                                               'volumn_rate': float(rtn.volumn_rate),
+                                               'market_total_sum': rtn.market_total_sum})
     else:
         stockSearch_info_rtn_list = []
 
