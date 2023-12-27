@@ -116,11 +116,15 @@ def list(request):
         stock_fund_mng_rtn_list = []
 
         for index, rtn in enumerate(stock_fund_mng_rtn, start=1):
+            
+            if rtn.market_ratio == None:
+                rtn.market_ratio = 0
+                
             stock_fund_mng_rtn_list.append(
-                {'asset_num': rtn.asset_num, 'acct_no': rtn.acct_no, 'cash_rate': rtn.cash_rate, 'tot_evlu_amt': format(int(rtn.tot_evlu_amt), ',d'),
-                 'cash_rate_amt': format(int(rtn.cash_rate_amt), ',d'), 'dnca_tot_amt': format(int(rtn.dnca_tot_amt), ',d'), 'prvs_rcdl_excc_amt': format(int(rtn.prvs_rcdl_excc_amt), ',d'),
-                 'nass_amt': format(int(rtn.nass_amt), ',d'), 'scts_evlu_amt': format(int(rtn.scts_evlu_amt), ',d'), 'asset_icdc_amt': format(int(rtn.asset_icdc_amt), ',d'),
-                 'sell_plan_amt': format(int(rtn.sell_plan_amt), ',d'), 'buy_plan_amt': format(int(rtn.buy_plan_amt), ',d'), 'market_ratio': rtn.market_ratio, 'last_chg_date': rtn.last_chg_date})
+                {'asset_num': rtn.asset_num, 'acct_no': rtn.acct_no, 'cash_rate': rtn.cash_rate, 'tot_evlu_amt': rtn.tot_evlu_amt,
+                 'cash_rate_amt': rtn.cash_rate_amt, 'dnca_tot_amt': rtn.dnca_tot_amt, 'prvs_rcdl_excc_amt': rtn.prvs_rcdl_excc_amt,
+                 'nass_amt': rtn.nass_amt, 'scts_evlu_amt': rtn.scts_evlu_amt, 'asset_icdc_amt': rtn.asset_icdc_amt,
+                 'sell_plan_amt': rtn.sell_plan_amt, 'buy_plan_amt': rtn.buy_plan_amt, 'market_ratio': rtn.market_ratio, 'last_chg_date': rtn.last_chg_date})
 
     else:
         stock_fund_mng_rtn_list = []

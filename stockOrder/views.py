@@ -22,6 +22,16 @@ import math
 #URL_BASE = "https://openapivts.koreainvestment.com:29443"   # 모의투자서비스
 URL_BASE = "https://openapi.koreainvestment.com:9443"       # 실전서비스
 
+def assetInfo(request):
+    acct_no = request.GET.get('acct_no', '')
+
+    asset_info = stock_fund_mng.objects.filter(acct_no=acct_no).order_by('-last_chg_date').first()
+    asset_risk_info = stock_market_mng.objects.filter(acct_no=acct_no, aply_end_dt='99991231').first()
+    stock_order_rtn_list = []
+    stock_order_rtn_list.append({'stock_asset_num': asset_info.asset_num, 'stock_asset_risk_num': asset_risk_info.asset_risk_num})
+
+    return JsonResponse(stock_order_rtn_list, safe=False)
+
 def orderList(request):
     acct_no = request.GET.get('acct_no', '')
     yyyy = DateFormat(datetime.now()).format('Y')
@@ -45,26 +55,16 @@ def orderList(request):
 
                     if rtn.order_stat == '01' or rtn.total_complete_qty > 0 or rtn.remain_qty > 0:
                         stock_order_rtn_list.append(
-                            {'id': rtn.id, 'code': rtn.code, 'name': rtn.name, 'buy_price': format(rtn.buy_price, ',d'), 'buy_amount': format(rtn.buy_amount, ',d'),
-                             'sell_price': format(rtn.sell_price, ',d'), 'sell_amount': format(rtn.sell_amount, ',d'), 'loss_price': format(rtn.loss_price, ',d'),
-                             'target_price': format(rtn.target_price, ',d'), 'trading_type': rtn.trading_type,
+                            {'id': rtn.id, 'code': rtn.code, 'name': rtn.name, 'buy_price': rtn.buy_price, 'buy_amount': rtn.buy_amount,
+                             'sell_price': rtn.sell_price, 'sell_amount': rtn.sell_amount, 'loss_price': rtn.loss_price,
+                             'target_price': rtn.target_price, 'trading_type': rtn.trading_type,
                              'asset_risk_num': rtn.asset_risk_num,
                              'asset_num': rtn.asset_num, 'proc_yn': rtn.proc_yn, 'order_no': rtn.order_no,
                              'order_stat': rtn.order_stat,
-                             'total_complete_qty': format(rtn.total_complete_qty, ',d'), 'remain_qty': format(rtn.remain_qty, ',d'),
+                             'total_complete_qty': rtn.total_complete_qty, 'remain_qty': rtn.remain_qty,
                              'create_date': rtn.create_date,
                              'proc_date': rtn.proc_date, 'stock_asset_num': asset_info.asset_num,
                              'stock_asset_risk_num': asset_risk_info.asset_risk_num})
-
-            else:
-                stock_order_rtn_list.append(
-                    {'id': "", 'code': "", 'name': "", 'buy_price': "", 'buy_amount': "",
-                     'sell_price': "", 'sell_amount': "", 'loss_price': "",
-                     'target_price': "", 'trading_type': "", 'asset_risk_num': "",
-                     'asset_num': "", 'proc_yn': "", 'order_no': "", 'order_stat': "",
-                     'create_date': "", 'total_complete_qty': "", 'remain_qty': "",
-                     'proc_date': "", 'stock_asset_num': asset_info.asset_num,
-                     'stock_asset_risk_num': asset_risk_info.asset_risk_num})
 
     return JsonResponse(stock_order_rtn_list, safe=False)
 
@@ -420,21 +420,12 @@ def send(request):
                 if len(stock_order_rtn) > 0:
                     for index, rtn in enumerate(stock_order_rtn, start=1):
                         stock_order_rtn_list.append(
-                            {'id': rtn.id, 'code': rtn.code, 'name': rtn.name, 'buy_price': format(rtn.buy_price, ',d'), 'buy_amount': format(rtn.buy_amount, ',d'),
-                            'sell_price': format(rtn.sell_price, ',d'), 'sell_amount': format(rtn.sell_amount, ',d'), 'loss_price': format(rtn.loss_price, ',d'),
-                            'target_price': format(rtn.target_price, ',d'), 'trading_type': rtn.trading_type, 'asset_risk_num': rtn.asset_risk_num,
+                            {'id': rtn.id, 'code': rtn.code, 'name': rtn.name, 'buy_price': rtn.buy_price, 'buy_amount': rtn.buy_amount,
+                            'sell_price': rtn.sell_price, 'sell_amount': rtn.sell_amount, 'loss_price': rtn.loss_price, 
+                            'target_price': rtn.target_price, 'trading_type': rtn.trading_type, 'asset_risk_num': rtn.asset_risk_num,
                             'asset_num': rtn.asset_num, 'proc_yn': rtn.proc_yn, 'order_no': rtn.order_no, 'order_stat': rtn.order_stat,
-                            'total_complete_qty': format(rtn.total_complete_qty, ',d'), 'remain_qty': format(rtn.remain_qty, ',d'), 'create_date': rtn.create_date,
+                            'total_complete_qty': rtn.total_complete_qty, 'remain_qty': rtn.remain_qty, 'create_date': rtn.create_date,
                             'proc_date': rtn.proc_date, 'stock_asset_num': asset_info.asset_num, 'stock_asset_risk_num': asset_risk_info.asset_risk_num, 'message':message})
-
-                else:
-                    stock_order_rtn_list.append(
-                        {'id': "", 'code': "", 'name': "", 'buy_price': "", 'buy_amount': "",
-                         'sell_price': "", 'sell_amount': "", 'loss_price': "",
-                         'target_price': "", 'trading_type': "", 'asset_risk_num': "",
-                         'asset_num': "", 'proc_yn': "", 'order_no': "", 'order_stat': "",
-                         'create_date': "", 'total_complete_qty': "", 'remain_qty': "",
-                         'proc_date': "", 'stock_asset_num': asset_info.asset_num, 'stock_asset_risk_num': asset_risk_info.asset_risk_num, 'message':message})
 
         return JsonResponse(stock_order_rtn_list, safe=False)
     except Exception as e:
@@ -516,21 +507,12 @@ def update(request):
                 if len(stock_order_rtn) > 0:
                     for index, rtn in enumerate(stock_order_rtn, start=1):
                         stock_order_rtn_list.append(
-                            {'id': rtn.id, 'code': rtn.code, 'name': rtn.name, 'buy_price': format(rtn.buy_price, ',d'), 'buy_amount': format(rtn.buy_amount, ',d'),
-                            'sell_price': format(rtn.sell_price, ',d'), 'sell_amount': format(rtn.sell_amount, ',d'), 'loss_price': format(rtn.loss_price, ',d'),
-                            'target_price': format(rtn.target_price, ',d'), 'trading_type': rtn.trading_type, 'asset_risk_num': rtn.asset_risk_num,
+                            {'id': rtn.id, 'code': rtn.code, 'name': rtn.name, 'buy_price': rtn.buy_price, 'buy_amount': rtn.buy_amount,
+                            'sell_price': rtn.sell_price, 'sell_amount': rtn.sell_amount, 'loss_price': rtn.loss_price, 
+                            'target_price': rtn.target_price, 'trading_type': rtn.trading_type, 'asset_risk_num': rtn.asset_risk_num,
                             'asset_num': rtn.asset_num, 'proc_yn': rtn.proc_yn, 'order_no': rtn.order_no, 'order_stat': rtn.order_stat,
-                            'total_complete_qty': format(rtn.total_complete_qty, ',d'), 'remain_qty': format(rtn.remain_qty, ',d'), 'create_date': rtn.create_date,
+                            'total_complete_qty': rtn.total_complete_qty, 'remain_qty': rtn.remain_qty, 'create_date': rtn.create_date,
                             'proc_date': rtn.proc_date, 'stock_asset_num': asset_info.asset_num, 'stock_asset_risk_num': asset_risk_info.asset_risk_num, 'message': message})
-
-                else:
-                    stock_order_rtn_list.append(
-                        {'id': "", 'code': "", 'name': "", 'buy_price': "", 'buy_amount': "",
-                         'sell_price': "", 'sell_amount': "", 'loss_price': "",
-                         'target_price': "", 'trading_type': "", 'asset_risk_num': "",
-                         'asset_num': "", 'proc_yn': "", 'order_no': "", 'order_stat': "",
-                         'create_date': "", 'total_complete_qty': "", 'remain_qty': "",
-                         'proc_date': "", 'stock_asset_num': asset_info.asset_num, 'stock_asset_risk_num': asset_risk_info.asset_risk_num, 'message': message})
 
         return JsonResponse(stock_order_rtn_list, safe=False)
     except Exception as e:
@@ -586,21 +568,12 @@ def cancel(request):
                 if len(stock_order_rtn) > 0:
                     for index, rtn in enumerate(stock_order_rtn, start=1):
                         stock_order_rtn_list.append(
-                            {'id': rtn.id, 'code': rtn.code, 'name': rtn.name, 'buy_price': format(rtn.buy_price, ',d'), 'buy_amount': format(rtn.buy_amount, ',d'),
-                            'sell_price': format(rtn.sell_price, ',d'), 'sell_amount': format(rtn.sell_amount, ',d'), 'loss_price': format(rtn.loss_price, ',d'),
-                            'target_price': format(rtn.target_price, ',d'), 'trading_type': rtn.trading_type, 'asset_risk_num': rtn.asset_risk_num,
+                            {'id': rtn.id, 'code': rtn.code, 'name': rtn.name, 'buy_price': rtn.buy_price, 'buy_amount': rtn.buy_amount, 
+                            'sell_price': rtn.sell_price, 'sell_amount': rtn.sell_amount, 'loss_price': rtn.loss_price,
+                            'target_price': rtn.target_price, 'trading_type': rtn.trading_type, 'asset_risk_num': rtn.asset_risk_num,
                             'asset_num': rtn.asset_num, 'proc_yn': rtn.proc_yn, 'order_no': rtn.order_no, 'order_stat': rtn.order_stat,
-                            'total_complete_qty': format(rtn.total_complete_qty, ',d'), 'remain_qty': format(rtn.remain_qty, ',d'), 'create_date': rtn.create_date,
+                            'total_complete_qty': rtn.total_complete_qty, 'remain_qty': rtn.remain_qty, 'create_date': rtn.create_date,
                             'proc_date': rtn.proc_date, 'stock_asset_num': asset_info.asset_num, 'stock_asset_risk_num': asset_risk_info.asset_risk_num})
-
-                else:
-                    stock_order_rtn_list.append(
-                        {'id': "", 'code': "", 'name': "", 'buy_price': "", 'buy_amount': "",
-                         'sell_price': "", 'sell_amount': "", 'loss_price': "",
-                         'target_price': "", 'trading_type': "", 'asset_risk_num': "",
-                         'asset_num': "", 'proc_yn': "", 'order_no': "", 'order_stat': "",
-                         'create_date': "", 'total_complete_qty': "", 'remain_qty': "",
-                         'proc_date': "", 'stock_asset_num': asset_info.asset_num, 'stock_asset_risk_num': asset_risk_info.asset_risk_num})
 
         return JsonResponse(stock_order_rtn_list, safe=False)
     except Exception as e:

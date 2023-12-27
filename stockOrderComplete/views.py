@@ -196,8 +196,8 @@ def basic(request):
 
             order_complete_rtn_list.append(
                 {'acct_no': rtn.acct_no, 'order_no': rtn.order_no, 'org_order_no': rtn.org_order_no, 'order_type': rtn.order_type, 'order_dt': rtn.order_dt,
-                 'order_tmd': rtn.order_tmd, 'name': rtn.name, 'order_price': format(int(rtn.order_price), ',d'), 'order_amount': format(int(rtn.order_amount), ',d'),
-                 'total_complete_qty': format(int(rtn.total_complete_qty), ',d'), 'remain_qty': format(int(rtn.remain_qty), ',d'), 'total_complete_amt': format(int(rtn.total_complete_amt), ',d')}
+                 'order_tmd': rtn.order_tmd, 'name': rtn.name, 'order_price': int(rtn.order_price), 'order_amount': int(rtn.order_amount),
+                 'total_complete_qty': int(rtn.total_complete_qty), 'remain_qty': int(rtn.remain_qty), 'total_complete_amt': int(rtn.total_complete_amt)}
             )
 
     return JsonResponse(order_complete_rtn_list, safe=False)

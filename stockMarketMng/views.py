@@ -278,8 +278,8 @@ def list(request):
 
         for index, rtn in enumerate(stock_market_mng_rtn, start=1):
             stock_market_mng_rtn_list.append(
-                {'asset_risk_num': rtn.asset_risk_num, 'acct_no': rtn.acct_no, 'market_level_num': rtn.market_level_num, 'total_asset': format(int(rtn.total_asset), ',d'), 'risk_rate': rtn.risk_rate,
-                 'risk_sum': format(int(rtn.risk_sum), ',d'), 'item_risk_sum': format(int(int(rtn.risk_sum)/int(rtn.item_number)), ',d'), 'item_number': rtn.item_number, 'aply_start_dt': rtn.aply_start_dt, 'aply_end_dt': rtn.aply_end_dt})
+                {'asset_risk_num': rtn.asset_risk_num, 'acct_no': rtn.acct_no, 'market_level_num': rtn.market_level_num, 'total_asset': rtn.total_asset, 'risk_rate': rtn.risk_rate,
+                 'risk_sum': rtn.risk_sum, 'item_risk_sum': int(int(rtn.risk_sum)/int(rtn.item_number)), 'item_number': rtn.item_number, 'aply_start_dt': rtn.aply_start_dt, 'aply_end_dt': rtn.aply_end_dt})
 
     else:
         stock_market_mng_rtn_list = []

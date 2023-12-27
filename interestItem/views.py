@@ -74,9 +74,9 @@ def list(request):
 
             interest_item_rtn_list.append(
                 {'id': rtn.id, 'acct_no': rtn.acct_no, 'code': rtn.code, 'name': rtn.name, 'K_through_price': rtn.K_through_price, 'D_leave_price': rtn.D_leave_price, 'K_resist_price': rtn.K_resist_price, 'D_support_price': rtn.D_support_price,
-                 'K_trend_high_price': rtn.K_trend_high_price, 'D_trend_low_price': rtn.D_trend_low_price, 'stck_prpr': current_price, 'prdy_vol_rate': str(prdy_vol_rate),
-                 'through_price': format(int(rtn.through_price), ',d'), 'leave_price': format(int(rtn.leave_price), ',d'), 'resist_price': format(int(rtn.resist_price), ',d'), 'support_price': format(int(rtn.support_price), ',d'),
-                 'trend_high_price': format(int(rtn.trend_high_price), ',d'), 'trend_low_price': format(int(rtn.trend_low_price), ',d'), 'buy_expect_sum': format(int(rtn.buy_expect_sum), ',d'), 'total_market_value': total_market_value, 'last_chg_date': rtn.last_chg_date})
+                 'K_trend_high_price': rtn.K_trend_high_price, 'D_trend_low_price': rtn.D_trend_low_price, 'stck_prpr': current_price, 'prdy_vol_rate': prdy_vol_rate,
+                 'through_price': rtn.through_price, 'leave_price': rtn.leave_price, 'resist_price': rtn.resist_price, 'support_price': rtn.support_price,
+                 'trend_high_price': rtn.trend_high_price, 'trend_low_price': rtn.trend_low_price, 'buy_expect_sum': rtn.buy_expect_sum, 'total_market_value': total_market_value, 'last_chg_date': rtn.last_chg_date})
 
     else:
         interest_item_rtn_list = []
@@ -84,10 +84,6 @@ def list(request):
     return JsonResponse(interest_item_rtn_list, safe=False)
 
 def update(request):
-    acct_no = request.GET.get('acct_no', '')
-    app_key = request.GET.get('app_key', '')
-    app_secret = request.GET.get('app_secret', '')
-    access_token = request.GET.get('access_token', '')
     id = request.GET.get('id', '')
     through_price = str(int(request.GET.get('through_price', '').replace(",", "")))
     leave_price = str(int(request.GET.get('leave_price', '').replace(",", "")))
@@ -97,80 +93,18 @@ def update(request):
     trend_low_price = str(int(request.GET.get('trend_low_price', '').replace(",", "")))
     buy_expect_sum = str(int(request.GET.get('buy_expect_sum', '').replace(",", "")))
 
-    interest_item.objects.filter(id=id).update(
-                    through_price=int(through_price),
-                    leave_price=int(leave_price),
-                    resist_price=int(resist_price),
-                    support_price=int(support_price),
-                    trend_high_price=int(trend_high_price),
-                    trend_low_price=int(trend_low_price),
-                    buy_expect_sum=int(buy_expect_sum),
-                    last_chg_date=datetime.now()
-                )
+    result = interest_item.objects.filter(id=id).update(
+        through_price=int(through_price),
+        leave_price=int(leave_price),
+        resist_price=int(resist_price),
+        support_price=int(support_price),
+        trend_high_price=int(trend_high_price),
+        trend_low_price=int(trend_low_price),
+        buy_expect_sum=int(buy_expect_sum),
+        last_chg_date=datetime.now()
+    )
 
-    interest_item_rtn = interest_item.objects.filter(acct_no=acct_no).order_by('code')
-    interest_item_rtn_list = []
-
-    today = datetime.now().strftime("%Y%m%d")
-
-    for index, rtn in enumerate(interest_item_rtn, start=1):
-
-        rtn.K_through_price = ""
-        rtn.D_leave_price = ""
-        rtn.K_resist_price = ""
-        rtn.D_support_price = ""
-        rtn.K_trend_high_price = ""
-        rtn.D_trend_low_price = ""
-        total_market_value = 0
-
-        if len(rtn.code) == 6:
-            # 주식현재가 시세
-            a = inquire_price(access_token, app_key, app_secret, rtn.code)
-            current_price = format(int(a['stck_prpr']), ',d')
-            print("현재가 : " + current_price)
-            prdy_vol_rate = format(round(float(a['prdy_vrss_vol_rate'])), ',d')
-            print("전일대비거래량 : " + str(prdy_vol_rate))
-            total_market_value = format(int(a['hts_avls']), ',d')
-            print("시가총액 : " + total_market_value)
-            if int(a['stck_prpr']) > int(rtn.through_price):
-                rtn.K_through_price = "1"
-            if int(a['stck_prpr']) < int(rtn.leave_price):
-                rtn.D_leave_price = "1"
-            if int(a['stck_prpr']) > int(rtn.resist_price):
-                rtn.K_resist_price = "1"
-            if int(a['stck_prpr']) < int(rtn.support_price):
-                rtn.D_support_price = "1"
-            if int(a['stck_prpr']) > int(rtn.trend_high_price):
-                rtn.K_trend_high_price = "1"
-            if int(a['stck_prpr']) < int(rtn.trend_low_price):
-                rtn.D_trend_low_price = "1"
-
-        elif len(rtn.code) == 4:
-            b = inquire_daily_indexchartprice(access_token, app_key, app_secret, rtn.code, today)
-            current_price = '{:0,.2f}'.format(float(b['bstp_nmix_prpr']), ',f')
-            print("현재가 : " + current_price)
-            prdy_vol_rate = format(round(int(b['acml_vol']) / int(b['prdy_vol']) * 100), ',d')
-            print("전일대비거래량 : " + str(prdy_vol_rate))
-            if math.ceil(float(b['bstp_nmix_prpr'])) > int(rtn.through_price):
-                rtn.K_through_price = "1"
-            if math.ceil(float(b['bstp_nmix_prpr'])) < int(rtn.leave_price):
-                rtn.D_leave_price = "1"
-            if math.ceil(float(b['bstp_nmix_prpr'])) > int(rtn.resist_price):
-                rtn.K_resist_price = "1"
-            if math.ceil(float(b['bstp_nmix_prpr'])) < int(rtn.support_price):
-                rtn.D_support_price = "1"
-            if math.ceil(float(b['bstp_nmix_prpr'])) > int(rtn.trend_high_price):
-                rtn.K_trend_high_price = "1"
-            if math.ceil(float(b['bstp_nmix_prpr'])) < int(rtn.trend_low_price):
-                rtn.D_trend_low_price = "1"
-
-        interest_item_rtn_list.append(
-            {'id': rtn.id, 'acct_no': rtn.acct_no, 'code': rtn.code, 'name': rtn.name, 'K_through_price': rtn.K_through_price, 'D_leave_price': rtn.D_leave_price, 'K_resist_price': rtn.K_resist_price, 'D_support_price': rtn.D_support_price,
-             'K_trend_high_price': rtn.K_trend_high_price, 'D_trend_low_price': rtn.D_trend_low_price, 'stck_prpr': current_price, 'prdy_vol_rate': str(prdy_vol_rate),
-             'through_price': format(int(rtn.through_price), ',d'), 'leave_price': format(int(rtn.leave_price), ',d'), 'resist_price': format(int(rtn.resist_price), ',d'), 'support_price': format(int(rtn.support_price), ',d'),
-             'trend_high_price': format(int(rtn.trend_high_price), ',d'), 'trend_low_price': format(int(rtn.trend_low_price), ',d'), 'buy_expect_sum': format(int(rtn.buy_expect_sum), ',d'), 'total_market_value': total_market_value, 'last_chg_date': rtn.last_chg_date})
-
-    return JsonResponse(interest_item_rtn_list, safe=False)
+    return JsonResponse(result, safe=False)
 
 # 주식현재가 시세
 def inquire_price(access_token, app_key, app_secret, code):

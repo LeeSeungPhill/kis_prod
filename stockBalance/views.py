@@ -181,19 +181,19 @@ def balanceList(request):
                 print("시가총액 : " + total_market_value)
 
                 stock_balance_rtn_list.append({'id': rtn.id, 'acct_no': rtn.acct_no, 'code': rtn.code, 'name': rtn.name,
-                                               'purchase_price': format(int(rtn.purchase_price), ',d'),
-                                               'purchase_amount': format(int(rtn.purchase_amount), ',d'),
-                                               'purchase_sum': format(int(rtn.purchase_sum), ',d'),
-                                               'current_price': format(int(rtn.current_price), ',d'),
-                                               'eval_sum': format(int(rtn.eval_sum), ',d'),
+                                               'purchase_price': float(round(float(rtn.purchase_price))),
+                                               'purchase_amount': rtn.purchase_amount,
+                                               'purchase_sum': rtn.purchase_sum,
+                                               'current_price': rtn.current_price,
+                                               'eval_sum': rtn.eval_sum,
                                                'earnings_rate': rtn.earnings_rate,
-                                               'valuation_sum': format(int(rtn.valuation_sum), ',d'),
+                                               'valuation_sum': rtn.valuation_sum,
                                                'K_sign_resist_price': rtn.K_sign_resist_price, 'D_sign_support_price': rtn.D_sign_support_price,
-                                               'sign_resist_price': format(int(rtn.sign_resist_price), ',d'),
-                                               'sign_support_price': format(int(rtn.sign_support_price), ',d'),
+                                               'sign_resist_price': rtn.sign_resist_price,
+                                               'sign_support_price': rtn.sign_support_price,
                                                'K_target_price': rtn.K_target_price, 'D_loss_price': rtn.D_loss_price,
-                                               'end_loss_price': format(int(rtn.end_loss_price), ',d'),
-                                               'end_target_price': format(int(rtn.end_target_price), ',d'),
+                                               'end_loss_price': rtn.end_loss_price,
+                                               'end_target_price': rtn.end_target_price,
                                                'trading_plan': rtn.trading_plan, 'asset_num': rtn.asset_num,
                                                'sell_plan_sum': rtn.sell_plan_sum,
                                                'sell_plan_amount': rtn.sell_plan_amount,
@@ -209,10 +209,6 @@ def balanceList(request):
 
 
 def update(request):
-    acct_no = request.GET.get('acct_no', '')
-    app_key = request.GET.get('app_key', '')
-    app_secret = request.GET.get('app_secret', '')
-    access_token = request.GET.get('access_token', '')
     id = request.GET.get('id', '')
     sign_resist_price = str(int(request.GET.get('sign_resist_price', '').replace(",", "")))
     sign_support_price = str(int(request.GET.get('sign_support_price', '').replace(",", "")))
@@ -220,7 +216,7 @@ def update(request):
     end_loss_price = str(int(request.GET.get('end_loss_price', '').replace(",", "")))
     trading_plan = request.GET.get('trading_plan', '')
 
-    stock_balance.objects.filter(id=id).update(
+    result = stock_balance.objects.filter(id=id).update(
         sign_resist_price=int(sign_resist_price),
         sign_support_price=int(sign_support_price),
         end_loss_price=int(end_loss_price),
@@ -229,60 +225,7 @@ def update(request):
         last_chg_date=datetime.now()
     )
 
-    stock_balance_rtn = stock_balance.objects.filter(acct_no=acct_no, proc_yn="Y").order_by('code')
-    stock_balance_rtn_list = []
-
-    for index, rtn in enumerate(stock_balance_rtn, start=1):
-        rtn.K_sign_resist_price = ""
-        rtn.D_sign_support_price = ""
-        rtn.K_target_price = ""
-        rtn.D_loss_price = ""
-
-        if rtn.sign_resist_price == None:
-            rtn.sign_resist_price = "0"
-        if rtn.sign_support_price == None:
-            rtn.sign_support_price = "0"
-        if rtn.end_target_price == None:
-            rtn.end_target_price = "0"
-        if rtn.end_loss_price == None:
-            rtn.end_loss_price = "0"
-
-        if int(rtn.current_price) > int(rtn.sign_resist_price):
-            rtn.K_sign_resist_price = "1"
-        if int(rtn.current_price) < int(rtn.sign_support_price):
-            rtn.D_sign_support_price = "1"
-        if int(rtn.current_price) > int(rtn.end_target_price):
-            rtn.K_target_price = "1"
-        if int(rtn.current_price) < int(rtn.end_loss_price):
-            rtn.D_loss_price = "1"
-
-        a = inquire_price(access_token, app_key, app_secret, rtn.code)
-
-        prdy_vol_rate = format(round(float(a['prdy_vrss_vol_rate'])), ',d')
-        print("전일대비거래량 : " + str(prdy_vol_rate))
-        total_market_value = format(int(a['hts_avls']), ',d')
-        print("시가총액 : " + total_market_value)
-
-        stock_balance_rtn_list.append(
-            {'id': rtn.id, 'acct_no': rtn.acct_no, 'code': rtn.code, 'name': rtn.name,
-             'purchase_price': format(int(rtn.purchase_price), ',d'),
-             'purchase_amount': format(int(rtn.purchase_amount), ',d'),
-             'purchase_sum': format(int(rtn.purchase_sum), ',d'),
-             'current_price': format(int(rtn.current_price), ',d'), 'eval_sum': format(int(rtn.eval_sum), ',d'),
-             'earnings_rate': rtn.earnings_rate, 'valuation_sum': format(int(rtn.valuation_sum), ',d'),
-             'K_sign_resist_price': rtn.K_sign_resist_price, 'D_sign_support_price': rtn.D_sign_support_price,
-             'sign_resist_price': format(int(rtn.sign_resist_price), ',d'),
-             'sign_support_price': format(int(rtn.sign_support_price), ',d'),
-             'K_target_price': rtn.K_target_price, 'D_loss_price': rtn.D_loss_price,
-             'end_loss_price': format(int(rtn.end_loss_price), ',d'),
-             'end_target_price': format(int(rtn.end_target_price), ',d'),
-             'trading_plan': rtn.trading_plan, 'asset_num': rtn.asset_num,
-             'sell_plan_sum': rtn.sell_plan_sum, 'sell_plan_amount': rtn.sell_plan_amount,
-             'prdy_vol_rate': prdy_vol_rate,
-             'total_market_value': total_market_value,
-             'last_chg_date': rtn.last_chg_date})
-
-    return JsonResponse(stock_balance_rtn_list, safe=False)
+    return JsonResponse(result, safe=False)
 
 
 def info(request):
