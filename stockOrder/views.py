@@ -129,8 +129,10 @@ def get_chart(code, company):
     pre_day = datetime.today() - timedelta(days=500)
     start = pre_day.strftime("%Y%m%d")
     end = datetime.now().strftime("%Y%m%d")
-    #print("start : " + start)
-    #print("end : " + end)
+    
+    if os.path.isfile(os.getcwd()+"/templates/stockOrder/"+company+".html"):
+        os.remove(os.getcwd()+"/templates/stockOrder/"+company+".html")
+
     df = web.naver.NaverDailyReader(code, start=start, end=end).read()
     #print(df)
     df = df.astype(int)  # Object 데이터를 int로 변환
@@ -871,6 +873,9 @@ def minutesInfo(request):
     app_key = request.GET.get('app_key', '')
     app_secret = request.GET.get('app_secret', '')
     access_token = request.GET.get('access_token', '')
+
+    if os.path.isfile(os.getcwd() + "/templates/stockOrder/minutes_" + company + ".html"):
+        os.remove(os.getcwd() + "/templates/stockOrder/minutes_" + company + ".html")
 
     # 현재일 기준 최근 영업일
     stock_day = stock.get_nearest_business_day_in_a_week(date=datetime.now().strftime("%Y%m%d"))

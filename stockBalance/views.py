@@ -447,6 +447,9 @@ def marketInfo(request):
         title = ""
         link = ""
 
+    if os.path.isfile(os.getcwd() + "/templates/stockBalance/" + link + ".html"):
+        os.remove(os.getcwd() + "/templates/stockBalance/" + link + ".html")        
+
     pre_day = datetime.today() - timedelta(days=500)
     start = pre_day.strftime("%Y%m%d")
     end = datetime.now().strftime("%Y%m%d")
@@ -497,6 +500,9 @@ def marketMinutesInfo(request):
     else:
         title = ""
         link = ""
+
+    if os.path.isfile(os.getcwd() + "/templates/stockBalance/minutes_" + link + ".html"):
+        os.remove(os.getcwd() + "/templates/stockBalance/minutes_" + link + ".html")
 
     date_time = []
     op = []
