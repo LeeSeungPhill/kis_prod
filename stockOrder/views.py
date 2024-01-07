@@ -336,7 +336,7 @@ def send(request):
                         print("매수 가능(현금) : " + format(int(b), ',d'));
                         if int(b) > n_buy_sum:  # 매수가능(현금)이 매수금액이 더 큰 경우
                             # 시장가 매수
-                            c = order_cash(True, access_token, app_key, app_secret, acct_no, i.code, "00", str(round(n_buy_amount)), str(i.buy_price))
+                            c = order_cash(True, access_token, app_key, app_secret, acct_no, i.code, "01", str(round(n_buy_amount)), "0")
                             if c['ODNO'] != "":
                                 stock_order.objects.filter(id=i.id).update(
                                     proc_yn="Y",
@@ -384,7 +384,7 @@ def send(request):
                         print("현재가 : " + format(int(a['stck_prpr']), ',d'))  # 현재가
                         i.sell_price = int(a['stck_prpr'])
                         # 시장가 매도
-                        c = order_cash(False, access_token, app_key, app_secret, acct_no, i.code, "00", str(round(i.sell_amount)), str(i.sell_price))
+                        c = order_cash(False, access_token, app_key, app_secret, acct_no, i.code, "01", str(round(i.sell_amount)), "0")
                     else:
                         # 주문가 매도
                         c = order_cash(False, access_token, app_key, app_secret, acct_no, i.code, "00", str(round(i.sell_amount)), str(i.sell_price))
