@@ -95,6 +95,8 @@ def balanceList(request):
                     e_earnings_rate = balance['evlu_pfls_rt'][i]
                     e_valuation_sum = int(balance['evlu_pfls_amt'][i])
 
+                    balance_object = stock_balance.objects.filter(acct_no=acct_no, code=e_code).order_by('-last_chg_date').first()
+
                     # 자산번호의 매도예정자금이 존재하는 경우, 보유종목 비중별 매도가능금액 및 매도가능수량 계산
                     if stock_fund_mng_info.sell_plan_amt > 0:
                         # 종목 매입금액 비중 = 평가금액 / 총평가금액(예수금총금액 + 유저평가금액) * 100
@@ -118,6 +120,11 @@ def balanceList(request):
                                       'eval_sum': e_eval_sum,  # 평가금액
                                       'earnings_rate': e_earnings_rate,  # 수익률
                                       'valuation_sum': e_valuation_sum,  # 평가손익금액
+                                      'sign_resist_price': balance_object.sign_resist_price,
+                                      'sign_support_price': balance_object.sign_support_price,
+                                      'end_loss_price': balance_object.end_loss_price,
+                                      'end_target_price': balance_object.end_target_price,
+                                      'trading_plan': balance_object.trading_plan,
                                       'asset_num': stock_fund_mng_info.asset_num,
                                       'sell_plan_sum': e_sell_plan_sum,  # 매도가능금액
                                       'sell_plan_amount': e_sell_plan_amount,  # 매도가능수량
@@ -138,6 +145,11 @@ def balanceList(request):
                                       'eval_sum': e_eval_sum,  # 평가금액
                                       'earnings_rate': e_earnings_rate,  # 수익률
                                       'valuation_sum': e_valuation_sum,  # 평가손익금액
+                                      'sign_resist_price': balance_object.sign_resist_price,
+                                      'sign_support_price': balance_object.sign_support_price,
+                                      'end_loss_price': balance_object.end_loss_price,
+                                      'end_target_price': balance_object.end_target_price,
+                                      'trading_plan': balance_object.trading_plan,
                                       'asset_num': stock_fund_mng_info.asset_num,
                                       'sell_plan_sum': 0,  # 매도가능금액
                                       'sell_plan_amount': 0,  # 매도가능수량
