@@ -177,7 +177,7 @@ def get_chart(code, company):
                       xaxis3_rangeslider_visible=False)
     #fig.show()
 
-    fig.write_html(os.getcwd()+"/templates/stockOrder/"+company+".html")
+    fig.write_html(os.getcwd()+"/templates/stockOrder/"+company+".html", auto_open=False)
 
 def detail(request, company):
     link = "stockOrder/"+company+".html"
@@ -923,7 +923,7 @@ def minutesInfo(request):
     fig.add_trace(go.Scatter(x=df['Date'], y=df['ma10'], line=dict(color="#414b73"), name='MA10'), row=2, col=1)
     fig.update_layout(xaxis1=dict(type="category", categoryorder='category ascending'), xaxis2=dict(type="category", categoryorder='category ascending'), title=company+"["+code+"]", yaxis1_title='Stock Price', yaxis2_title='Volume', xaxis2_title='periods', xaxis1_rangeslider_visible=False, xaxis2_rangeslider_visible=False,)
     #fig.show()
-    fig.write_html(os.getcwd() + "/templates/stockOrder/minutes_" + company + ".html")
+    fig.write_html(os.getcwd() + "/templates/stockOrder/minutes_" + company + ".html", auto_open=False)
 
     stock_info_rtn_list = []
     stock_info_rtn_list.append({'code': code, 'name': company})

@@ -306,7 +306,7 @@ def info(request):
                       xaxis1_rangeslider_visible=False, xaxis2_rangeslider_visible=False,
                       xaxis3_rangeslider_visible=False)
     # fig.show()
-    fig.write_html(os.getcwd() + "/templates/stockBalance/" + company + ".html")
+    fig.write_html(os.getcwd() + "/templates/stockBalance/" + company + ".html", auto_open=False)
 
     stock_info_rtn_list = []
     stock_info_rtn_list.append({'code': code, 'name': company})
@@ -391,7 +391,7 @@ def minutesInfo(request):
                       title=company + "[" + code + "]", yaxis1_title='Stock Price', yaxis2_title='Volume',
                       xaxis2_title='periods', xaxis1_rangeslider_visible=False, xaxis2_rangeslider_visible=False, )
     # fig.show()
-    fig.write_html(os.getcwd() + "/templates/stockBalance/minutes_" + company + ".html")
+    fig.write_html(os.getcwd() + "/templates/stockBalance/minutes_" + company + ".html", auto_open=False)
 
     stock_info_rtn_list = []
     stock_info_rtn_list.append({'code': code, 'name': company})
@@ -489,7 +489,7 @@ def marketInfo(request):
                       yaxis1_title='Index', yaxis2_title='Volume',
                       xaxis1_rangeslider_visible=False, xaxis2_rangeslider_visible=False)
     # fig.show()
-    fig.write_html(os.getcwd() + "/templates/stockBalance/" + link + ".html")
+    fig.write_html(os.getcwd() + "/templates/stockBalance/" + link + ".html", auto_open=False)
 
     stock_info_rtn_list = []
     stock_info_rtn_list.append({'market': link})
@@ -551,7 +551,7 @@ def marketMinutesInfo(request):
                       yaxis1_title='Index', yaxis2_title='Volume', xaxis2_title='periods',
                       xaxis1_rangeslider_visible=False, xaxis2_rangeslider_visible=False, )
     # fig.show()
-    fig.write_html(os.getcwd() + "/templates/stockBalance/minutes_" + link + ".html")
+    fig.write_html(os.getcwd() + "/templates/stockBalance/minutes_" + link + ".html", auto_open=False)
 
     stock_info_rtn_list = []
     stock_info_rtn_list.append({'market': link})
