@@ -261,8 +261,10 @@ def info(request):
     pre_day = datetime.today() - timedelta(days=500)
     start = pre_day.strftime("%Y%m%d")
     end = datetime.now().strftime("%Y%m%d")
-    # print("start : " + start)
-    # print("end : " + end)
+
+    if os.path.isfile(os.getcwd()+"/templates/stockBalance/"+company):
+        os.remove(os.getcwd()+"/templates/stockBalance/"+company)
+
     df = web.naver.NaverDailyReader(code, start=start, end=end).read()
     # print(df)
     df = df.astype(int)  # Object 데이터를 int로 변환
@@ -309,7 +311,7 @@ def info(request):
     fig.write_html(os.getcwd() + "/templates/stockBalance/" + company + datetime.now().strftime("%Y%m%d") + time.strftime('%H%M') + ".html", auto_open=False)
 
     stock_info_rtn_list = []
-    stock_info_rtn_list.append({'code': code, 'name': company})
+    stock_info_rtn_list.append({'code': code, 'name': company + datetime.now().strftime("%Y%m%d") + time.strftime('%H%M')})
 
     return JsonResponse(stock_info_rtn_list, safe=False)
 
@@ -325,6 +327,9 @@ def minutesInfo(request):
     app_key = request.GET.get('app_key', '')
     app_secret = request.GET.get('app_secret', '')
     access_token = request.GET.get('access_token', '')
+
+    if os.path.isfile(os.getcwd() + "/templates/stockBalance/minutes_" + company):
+        os.remove(os.getcwd() + "/templates/stockBalance/minutes_" + company)
 
     # 해당 링크는 한국거래소에서 상장법인목록을 엑셀로 다운로드하는 링크입니다.
     # 다운로드와 동시에 Pandas에 excel 파일이 load가 되는 구조입니다.
@@ -394,7 +399,7 @@ def minutesInfo(request):
     fig.write_html(os.getcwd() + "/templates/stockBalance/minutes_" + company + datetime.now().strftime("%Y%m%d") + time.strftime('%H%M') + ".html", auto_open=False)
 
     stock_info_rtn_list = []
-    stock_info_rtn_list.append({'code': code, 'name': company})
+    stock_info_rtn_list.append({'code': code, 'name': company + datetime.now().strftime("%Y%m%d") + time.strftime('%H%M')})
 
     return JsonResponse(stock_info_rtn_list, safe=False)
 
@@ -459,8 +464,8 @@ def marketInfo(request):
         title = ""
         link = ""
 
-    if os.path.isfile(os.getcwd() + "/templates/stockBalance/" + link + ".html"):
-        os.remove(os.getcwd() + "/templates/stockBalance/" + link + ".html")        
+    if os.path.isfile(os.getcwd() + "/templates/stockBalance/" + link):
+        os.remove(os.getcwd() + "/templates/stockBalance/" + link)        
 
     pre_day = datetime.today() - timedelta(days=500)
     start = pre_day.strftime("%Y%m%d")
@@ -492,7 +497,7 @@ def marketInfo(request):
     fig.write_html(os.getcwd() + "/templates/stockBalance/" + link + datetime.now().strftime("%Y%m%d") + time.strftime('%H%M') + ".html", auto_open=False)
 
     stock_info_rtn_list = []
-    stock_info_rtn_list.append({'market': link})
+    stock_info_rtn_list.append({'market': link + datetime.now().strftime("%Y%m%d") + time.strftime('%H%M')})
 
     return JsonResponse(stock_info_rtn_list, safe=False)
 
@@ -513,8 +518,8 @@ def marketMinutesInfo(request):
         title = ""
         link = ""
 
-    if os.path.isfile(os.getcwd() + "/templates/stockBalance/minutes_" + link + ".html"):
-        os.remove(os.getcwd() + "/templates/stockBalance/minutes_" + link + ".html")
+    if os.path.isfile(os.getcwd() + "/templates/stockBalance/minutes_" + link):
+        os.remove(os.getcwd() + "/templates/stockBalance/minutes_" + link)
 
     date_time = []
     op = []
@@ -554,7 +559,7 @@ def marketMinutesInfo(request):
     fig.write_html(os.getcwd() + "/templates/stockBalance/minutes_" + link + datetime.now().strftime("%Y%m%d") + time.strftime('%H%M') + ".html", auto_open=False)
 
     stock_info_rtn_list = []
-    stock_info_rtn_list.append({'market': link})
+    stock_info_rtn_list.append({'market': link + datetime.now().strftime("%Y%m%d") + time.strftime('%H%M')})
 
     return JsonResponse(stock_info_rtn_list, safe=False)
 
