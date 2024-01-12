@@ -120,7 +120,7 @@ def info(request):
 
     stock_order_rtn_list.append(
         {'code': code, 'now_price': now_price, 'high_price': high_price, 'low_price': low_price,
-         'open_price': open_price, 'max_price': max_price, 'min_price': min_price, 'volumn': volumn, 'total_market_value': total_market_value, 'prdy_vol_rate': prdy_vol_rate})
+         'open_price': open_price, 'max_price': max_price, 'min_price': min_price, 'volumn': volumn, 'total_market_value': total_market_value, 'prdy_vol_rate': prdy_vol_rate, 'YmdHM': datetime.now().strftime("%Y%m%d") + time.strftime('%H%M')})
 
     return JsonResponse(stock_order_rtn_list, safe=False)
     #data = {'columns': [Counts, Costs, ]}
