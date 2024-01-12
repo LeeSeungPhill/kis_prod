@@ -12,6 +12,7 @@ import plotly.subplots as ms
 import pandas_datareader as web
 from django.shortcuts import render
 import os
+import glob
 import time
 from pykrx import stock
 
@@ -262,8 +263,8 @@ def info(request):
     start = pre_day.strftime("%Y%m%d")
     end = datetime.now().strftime("%Y%m%d")
 
-    if os.path.isfile(os.getcwd()+"/templates/stockBalance/"+company):
-        os.remove(os.getcwd()+"/templates/stockBalance/"+company)
+    for f in glob.glob(os.getcwd()+"/templates/stockBalance/"+company + "*.html"):
+        os.remove(f)
 
     df = web.naver.NaverDailyReader(code, start=start, end=end).read()
     # print(df)
@@ -328,8 +329,8 @@ def minutesInfo(request):
     app_secret = request.GET.get('app_secret', '')
     access_token = request.GET.get('access_token', '')
 
-    if os.path.isfile(os.getcwd() + "/templates/stockBalance/minutes_" + company):
-        os.remove(os.getcwd() + "/templates/stockBalance/minutes_" + company)
+    for f in glob.glob(os.getcwd()+"/templates/stockBalance/minutes_"+company + "*.html"):
+        os.remove(f) 
 
     # 해당 링크는 한국거래소에서 상장법인목록을 엑셀로 다운로드하는 링크입니다.
     # 다운로드와 동시에 Pandas에 excel 파일이 load가 되는 구조입니다.
@@ -464,8 +465,8 @@ def marketInfo(request):
         title = ""
         link = ""
 
-    if os.path.isfile(os.getcwd() + "/templates/stockBalance/" + link):
-        os.remove(os.getcwd() + "/templates/stockBalance/" + link)        
+    for f in glob.glob(os.getcwd()+"/templates/stockBalance/" + link + "*.html"):
+        os.remove(f)         
 
     pre_day = datetime.today() - timedelta(days=500)
     start = pre_day.strftime("%Y%m%d")
@@ -518,8 +519,8 @@ def marketMinutesInfo(request):
         title = ""
         link = ""
 
-    if os.path.isfile(os.getcwd() + "/templates/stockBalance/minutes_" + link):
-        os.remove(os.getcwd() + "/templates/stockBalance/minutes_" + link)
+    for f in glob.glob(os.getcwd()+"/templates/stockBalance/minutes_" + link + "*.html"):
+        os.remove(f)
 
     date_time = []
     op = []

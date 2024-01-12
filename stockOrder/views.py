@@ -15,6 +15,7 @@ import pandas_datareader as web
 import json
 from django.shortcuts import render
 import os
+import glob
 import time
 from pykrx import stock
 import math
@@ -130,8 +131,8 @@ def get_chart(code, company):
     start = pre_day.strftime("%Y%m%d")
     end = datetime.now().strftime("%Y%m%d")
     
-    if os.path.isfile(os.getcwd()+"/templates/stockOrder/"+company):
-        os.remove(os.getcwd()+"/templates/stockOrder/"+company)
+    for f in glob.glob(os.getcwd()+"/templates/stockOrder/" + company + "*.html"):
+        os.remove(f) 
 
     df = web.naver.NaverDailyReader(code, start=start, end=end).read()
     #print(df)
@@ -874,8 +875,8 @@ def minutesInfo(request):
     app_secret = request.GET.get('app_secret', '')
     access_token = request.GET.get('access_token', '')
 
-    if os.path.isfile(os.getcwd() + "/templates/stockOrder/minutes_" + company):
-        os.remove(os.getcwd() + "/templates/stockOrder/minutes_" + company)
+    for f in glob.glob(os.getcwd()+"/templates/stockOrder/minutes_" + company + "*.html"):
+        os.remove(f)
 
     # 현재일 기준 최근 영업일
     stock_day = stock.get_nearest_business_day_in_a_week(date=datetime.now().strftime("%Y%m%d"))
