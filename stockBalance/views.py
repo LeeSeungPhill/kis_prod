@@ -323,113 +323,6 @@ def detail(request, company):
     return render(request, link)
 
 
-def minutesInfo(request):
-    company = request.GET.get('company', '')
-    app_key = request.GET.get('app_key', '')
-    app_secret = request.GET.get('app_secret', '')
-    access_token = request.GET.get('access_token', '')
-
-    for f in glob.glob(os.getcwd()+"/templates/stockBalance/minutes_"+company + "*.html"):
-        os.remove(f) 
-
-    # 해당 링크는 한국거래소에서 상장법인목록을 엑셀로 다운로드하는 링크입니다.
-    # 다운로드와 동시에 Pandas에 excel 파일이 load가 되는 구조입니다.
-    stock_code = pd.read_html('http://kind.krx.co.kr/corpgeneral/corpList.do?method=download', header=0)[0]
-    # 필요한 것은 "회사명"과 "종목코드" 이므로 필요없는 column들은 제외
-    stock_code = stock_code[['회사명', '종목코드']]
-    # 한글 컬럼명을 영어로 변경
-    stock_code = stock_code.rename(columns={'회사명': 'company', '종목코드': 'code'})
-    # 종목코드가 6자리이기 때문에 6자리를 맞춰주기 위해 설정해줌
-    stock_code.code = stock_code.code.map('{:06d}'.format)
-
-    if len(stock_code[stock_code.company == company].values) > 0:
-        code = stock_code[stock_code.company == company].code.values[0].strip()  ## strip() : 공백제거
-    else:
-        code = ""
-
-    # 현재일 기준 최근 영업일
-    stock_day = stock.get_nearest_business_day_in_a_week(date=datetime.now().strftime("%Y%m%d"))
-
-    if time.strftime('%H%M%S') > '153000':
-        hms = '153000'
-    elif time.strftime('%H%M%S') < '090000':
-        hms = '153000'
-    else:
-        hms = time.strftime('%H%M%S')
-
-    date_time = []
-    op = []
-    hg = []
-    lw = []
-    cl = []
-    vol = []
-
-    for i in range(13):
-        if hms > '090000':
-            b = pd.DataFrame(inquire_time_itemchartprice(access_token, app_key, app_secret, code, hms))  # 30분간 1분봉 조회
-            for i, name in enumerate(b.index):
-                # date_time.append(datetime.datetime.strptime((b['stck_bsop_date'][i] + b['stck_cntg_hour'][i]), '%Y%m%d%H%M%S'))
-                date_time.append(b['stck_bsop_date'][i] + b['stck_cntg_hour'][i][:4])
-                op.append(b['stck_oprc'][i])
-                hg.append(b['stck_hgpr'][i])
-                lw.append(b['stck_lwpr'][i])
-                cl.append(b['stck_prpr'][i])
-                vol.append(int(b['cntg_vol'][i]))
-            hms = (datetime.strptime((stock_day + hms), '%Y%m%d%H%M%S') - timedelta(minutes=30)).strftime('%H%M%S')
-            # print(hms)
-
-    df = pd.DataFrame((zip(date_time, op, hg, lw, cl, vol)), columns=['Date', 'Open', 'High', 'Low', 'Close', 'Volume'])
-    # df.set_index(['Date'], inplace=True)
-    # print(df)
-    df['ma10'] = df['Volume'].rolling(10).mean()
-    # df = df.reset_index()
-    # df['Date'] = df['Date'].apply(lambda x: datetime.datetime.strftime(x, '%Y%m%d%H%M%S'))
-    data1 = go.Candlestick(x=df['Date'], open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'],
-                           increasing_line_color='red', decreasing_line_color='blue', name="candle")
-    data2 = go.Bar(x=df['Date'], y=df['Volume'], name="volumn", marker_color="green")
-
-    fig = ms.make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.005, row_heights=[0.7, 0.3])
-    fig.add_trace(data1, row=1, col=1)
-    fig.add_trace(data2, row=2, col=1)
-    fig.add_trace(go.Scatter(x=df['Date'], y=df['ma10'], line=dict(color="#414b73"), name='MA10'), row=2, col=1)
-    fig.update_layout(xaxis1=dict(type="category", categoryorder='category ascending'),
-                      xaxis2=dict(type="category", categoryorder='category ascending'),
-                      title=company + "[" + code + "]", yaxis1_title='Stock Price', yaxis2_title='Volume',
-                      xaxis2_title='periods', xaxis1_rangeslider_visible=False, xaxis2_rangeslider_visible=False, )
-    # fig.show()
-    fig.write_html(os.getcwd() + "/templates/stockBalance/minutes_" + company + datetime.now().strftime("%Y%m%d") + time.strftime('%H%M') + ".html", auto_open=False)
-
-    stock_info_rtn_list = []
-    stock_info_rtn_list.append({'code': code, 'name': company + datetime.now().strftime("%Y%m%d") + time.strftime('%H%M')})
-
-    return JsonResponse(stock_info_rtn_list, safe=False)
-
-
-def inquire_time_itemchartprice(access_token, app_key, app_secret, code, time):
-    #URL_BASE = "https://openapivts.koreainvestment.com:29443"  # 모의투자서비스
-    URL_BASE = "https://openapi.koreainvestment.com:9443"       # 실전서비스
-
-    headers = {"Content-Type": "application/json",
-               "authorization": f"Bearer {access_token}",
-               "appKey": app_key,
-               "appSecret": app_secret,
-               "tr_id": "FHKST03010200",
-               "custtype": "P"}
-    params = {
-        'FID_ETC_CLS_CODE': "",
-        'FID_COND_MRKT_DIV_CODE': "J",  # 시장 분류 코드(J : 주식, ETF, ETN U: 업종)
-        'FID_INPUT_ISCD': code,
-        'FID_INPUT_HOUR_1': time,
-        # 종목(J)일 경우, 조회 시작일자(HHMMSS)ex) "123000" 입력 시 12시 30분 이전부터 1분 간격으로 조회 업종(U)일 경우, 조회간격(초) (60 or 120 만 입력 가능) ex) "60" 입력 시 현재시간부터 1분간격으로 조회 "120" 입력 시 현재시간부터 2분간격으로 조회
-        'FID_PW_DATA_INCU_YN': 'Y'}  # 과거 데이터 포함 여부(Y/N) * 업종(U) 조회시에만 동작하는 구분값 N : 당일데이터만 조회 Y : 이후데이터도 조회(조회시점이 083000(오전8:30)일 경우 전일자 업종 시세 데이터도 같이 조회됨)
-    PATH = "uapi/domestic-stock/v1/quotations/inquire-time-itemchartprice"
-    URL = f"{URL_BASE}/{PATH}"
-    res = requests.get(URL, headers=headers, params=params, verify=False)
-    ar = resp.APIResp(res)
-
-    return ar.getBody().output2
-
-
 def get_stochastic(df, n=15, m=5, t=3):
     # 입력받은 값이 dataframe이라는 것을 정의해줌
     df = pd.DataFrame(df)
@@ -453,30 +346,69 @@ def get_stochastic(df, n=15, m=5, t=3):
 
 
 def marketInfo(request):
+    app_key = request.GET.get('app_key', '')
+    app_secret = request.GET.get('app_secret', '')
+    access_token = request.GET.get('access_token', '')
     market = request.GET.get('market', '')
+    weekday = request.GET.get('weekday', '')
 
-    if market == "1001":
-        title = "코스피"
-        link = "kospi"
-    elif market == "2001":
-        title = "코스닥"
-        link = "kosdak"
+    if market == "0001":
+        if weekday == "D":
+            title = "코스피 일봉"
+            link = "daykospi"
+        elif weekday == "W":
+            title = "코스피 주봉"
+            link = "weekkospi"
+        else:
+            title = ""
+            link = ""    
+    elif market == "1001":
+        if weekday == "D":
+            title = "코스닥 일봉"
+            link = "daykosdak"
+        elif weekday == "W":
+            title = "코스닥 주봉"
+            link = "weekkosdak"    
+        else:
+            title = ""
+            link = ""                
     else:
         title = ""
         link = ""
 
     for f in glob.glob(os.getcwd()+"/templates/stockBalance/" + link + "*.html"):
-        os.remove(f)         
+        os.remove(f)          
 
-    pre_day = datetime.today() - timedelta(days=500)
-    start = pre_day.strftime("%Y%m%d")
-    end = datetime.now().strftime("%Y%m%d")
-    # print("start : " + start)
-    # print("end : " + end)
-    df = stock.get_index_ohlcv(start, end, market)
+    # 현재일 기준 최근 영업일
+    stock_day = stock.get_nearest_business_day_in_a_week(date=datetime.now().strftime("%Y%m%d"))
+    end = stock_day
+
+    date_time = []
+    op = []
+    hg = []
+    lw = []
+    cl = []
+    vol = []
+
+    for h in range(1, 7):
+        if weekday == "W":
+            start = (datetime.strptime(stock_day, '%Y%m%d') - timedelta(weeks=h*50)).strftime('%Y%m%d')    
+        else:
+            start = (datetime.strptime(stock_day, '%Y%m%d') - timedelta(days=h*70)).strftime('%Y%m%d')    
+        b = pd.DataFrame(inquire_daily_marketchartprice(access_token, app_key, app_secret, market, start, end,weekday))
+        for i, name in enumerate(b.index):
+            date_time.append(b['stck_bsop_date'][i])
+            op.append(b['bstp_nmix_oprc'][i])
+            hg.append(b['bstp_nmix_hgpr'][i])
+            lw.append(b['bstp_nmix_lwpr'][i])
+            cl.append(b['bstp_nmix_prpr'][i])
+            vol.append(int(b['acml_vol'][i]))
+        end = start
+
+    df = pd.DataFrame((zip(date_time, op, hg, lw, cl, vol)), columns=['날짜', '시가', '고가', '저가', '종가', '거래량'])
     # print(df)
     df = df.reset_index()
-    df['날짜'] = df['날짜'].apply(lambda x: datetime.strftime(x, '%Y-%m-%d'))
+    #df['날짜'] = df['날짜'].apply(lambda x: datetime.datetime.strftime(x, '%Y-%m-%d'))
     df['ma10'] = df['거래량'].rolling(10).mean()
     color_fuc = lambda x: 'red' if x >= 0 else 'blue'
     color_list = list(df['거래량'].diff().fillna(0).apply(color_fuc))
@@ -508,19 +440,34 @@ def marketMinutesInfo(request):
     app_key = request.GET.get('app_key', '')
     app_secret = request.GET.get('app_secret', '')
     access_token = request.GET.get('access_token', '')
+    minute = request.GET.get('minute', '')
 
     if market == "0001":
-        title = "코스피 15분봉"
-        link = "kospi"
+        if minute == "600":
+            title = "코스피 10분봉"
+            link = "10kospi"
+        elif minute == "3600":
+            title = "코스피 60분봉"
+            link = "60kospi"
+        else:
+            title = ""
+            link = ""            
     elif market == "1001":
-        title = "코스닥 15분봉"
-        link = "kosdak"
+        if minute == "600":
+            title = "코스닥 10분봉"
+            link = "10kosdak"
+        elif minute == "3600":    
+            title = "코스닥 60분봉"
+            link = "60kosdak"
+        else:
+            title = ""
+            link = ""                        
     else:
         title = ""
         link = ""
 
     for f in glob.glob(os.getcwd()+"/templates/stockBalance/minutes_" + link + "*.html"):
-        os.remove(f)
+        os.remove(f)                  
 
     date_time = []
     op = []
@@ -529,7 +476,7 @@ def marketMinutesInfo(request):
     cl = []
     vol = []
 
-    b = pd.DataFrame(inquire_time_marketchartprice(access_token, app_key, app_secret, market))
+    b = pd.DataFrame(inquire_time_marketchartprice(access_token, app_key, app_secret, market, minute))
     for i, name in enumerate(b.index):
         date_time.append(b['stck_bsop_date'][i] + b['stck_cntg_hour'][i][:4])
         op.append(b['stck_oprc'][i])
@@ -565,7 +512,30 @@ def marketMinutesInfo(request):
     return JsonResponse(stock_info_rtn_list, safe=False)
 
 
-def inquire_time_marketchartprice(access_token, app_key, app_secret, market):
+def inquire_daily_marketchartprice(access_token, app_key, app_secret, market, start, end, weekday):
+    #URL_BASE = "https://openapivts.koreainvestment.com:29443"  # 모의투자서비스
+    URL_BASE = "https://openapi.koreainvestment.com:9443"       # 실전서비스
+
+    headers = {"Content-Type": "application/json",
+               "authorization": f"Bearer {access_token}",
+               "appKey": app_key,
+               "appSecret": app_secret,
+               "tr_id": "FHKUP03500100",
+               "custtype": "P"}
+    params = {
+        'FID_COND_MRKT_DIV_CODE': "U",
+        'FID_INPUT_ISCD': market,
+        'FID_INPUT_DATE_1': start,          # 조회 시작일자 (ex. 20220501)
+        'FID_INPUT_DATE_2': end,            # 조회 종료일자 (ex. 20220530)
+        'FID_PERIOD_DIV_CODE': weekday}     # D:일봉 W:주봉, M:월봉, Y:년봉
+    PATH = "uapi/domestic-stock/v1/quotations/inquire-daily-indexchartprice"
+    URL = f"{URL_BASE}/{PATH}"
+    res = requests.get(URL, headers=headers, params=params, verify=False)
+    ar = resp.APIResp(res)
+    ar.printAll()
+    return ar.getBody().output2
+
+def inquire_time_marketchartprice(access_token, app_key, app_secret, market, minute):
     #URL_BASE = "https://openapivts.koreainvestment.com:29443"  # 모의투자서비스
     URL_BASE = "https://openapi.koreainvestment.com:9443"       # 실전서비스
 
@@ -576,12 +546,11 @@ def inquire_time_marketchartprice(access_token, app_key, app_secret, market):
                "tr_id": "FHKST03010200",
                "custtype": "P"}
     params = {
-        'FID_ETC_CLS_CODE': "",
-        'FID_COND_MRKT_DIV_CODE': "U",  # 시장 분류 코드(J : 주식, ETF, ETN U: 업종)
-        'FID_INPUT_ISCD': market,
-        'FID_INPUT_HOUR_1': '900',
-        # 종목(J)일 경우, 조회 시작일자(HHMMSS)ex) "123000" 입력 시 12시 30분 이전부터 1분 간격으로 조회 업종(U)일 경우, 조회간격(초) (60 or 120 만 입력 가능) ex) "60" 입력 시 현재시간부터 1분간격으로 조회 "120" 입력 시 현재시간부터 2분간격으로 조회
-        'FID_PW_DATA_INCU_YN': 'N'}  # 과거 데이터 포함 여부(Y/N) * 업종(U) 조회시에만 동작하는 구분값 N : 당일데이터만 조회 Y : 이후데이터도 조회(조회시점이 083000(오전8:30)일 경우 전일자 업종 시세 데이터도 같이 조회됨)
+        'FID_COND_MRKT_DIV_CODE': "U",  
+        'FID_INPUT_ISCD': market,           # 0001 : 종합, 1001:코스닥종합
+        'FID_INPUT_HOUR_1': minute,         # 30, 60 -> 1분, 600-> 10분, 3600 -> 1시간
+        'FID_PW_DATA_INCU_YN': 'Y',         # Y (과거) / N (당일)
+        'FID_ETC_CLS_CODE': "1",}           # 0: 기본 1:장마감,시간외 제외
     PATH = "uapi/domestic-stock/v1/quotations/inquire-time-itemchartprice"
     URL = f"{URL_BASE}/{PATH}"
     res = requests.get(URL, headers=headers, params=params, verify=False)
