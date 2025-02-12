@@ -1034,11 +1034,11 @@ def runStockSearch(request):
         URL = f"{URL_BASE}/{PATH}"
         res = requests.get(URL, headers=headers, params=params, verify=False)
         ar = resp.APIResp(res)
-        # ar.printAll()
+        #ar.printAll()
         return ar.getBody().output2
 
     item_search = inquire_search_result(access_token, app_key, app_secret, 'phills2', search_choice)  # 종목조건검색 조회
-
+    
     for i in item_search:
         stock_search_form.objects.update_or_create(search_day=today, code=i['code'], search_name=search_name,
             defaults={'search_day':today,
