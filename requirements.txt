@@ -1,0 +1,9 @@
+Django
+django-cors-headers
+djangorestframework
+plotly
+psycopg2-binary
+pandas
+PyYaml
+pandas_datareader
+pykrx
