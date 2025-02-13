@@ -98,66 +98,94 @@ def balanceList(request):
 
                     balance_object = stock_balance.objects.filter(acct_no=acct_no, code=e_code).order_by('-last_chg_date').first()
 
-                    # 자산번호의 매도예정자금이 존재하는 경우, 보유종목 비중별 매도가능금액 및 매도가능수량 계산
-                    if stock_fund_mng_info.sell_plan_amt > 0:
-                        # 종목 매입금액 비중 = 평가금액 / 총평가금액(예수금총금액 + 유저평가금액) * 100
-                        item_eval_gravity = e_eval_sum / u_tot_evlu_amt * 100
-                        print("종목 매입금액 비중 : " + format(int(item_eval_gravity), ',d'))
-                        # 종목 매도가능금액 = 매도예정자금 * 종목 매입금액 비중 * 0.01
-                        e_sell_plan_sum = stock_fund_mng_info.sell_plan_amt * item_eval_gravity * 0.01
+                    if balance_object is not None:
+                    
+                        # 자산번호의 매도예정자금이 존재하는 경우, 보유종목 비중별 매도가능금액 및 매도가능수량 계산
+                        if stock_fund_mng_info.sell_plan_amt > 0:
+                            # 종목 매입금액 비중 = 평가금액 / 총평가금액(예수금총금액 + 유저평가금액) * 100
+                            item_eval_gravity = e_eval_sum / u_tot_evlu_amt * 100
+                            print("종목 매입금액 비중 : " + format(int(item_eval_gravity), ',d'))
+                            # 종목 매도가능금액 = 매도예정자금 * 종목 매입금액 비중 * 0.01
+                            e_sell_plan_sum = stock_fund_mng_info.sell_plan_amt * item_eval_gravity * 0.01
 
-                        # 종목 매도가능수량 = 종목 매도가능금액 / 현재가
-                        e_sell_plan_amount = e_sell_plan_sum / e_current_price
+                            # 종목 매도가능수량 = 종목 매도가능금액 / 현재가
+                            e_sell_plan_amount = e_sell_plan_sum / e_current_price
 
-                        stock_balance.objects.update_or_create(
-                            acct_no=acct_no, code=e_code, asset_num=stock_fund_mng_info.asset_num,
-                            defaults={'acct_no': acct_no,  # 계좌번호
-                                      'code': e_code,  # 종목코드
-                                      'name': e_name,  # 종목명
-                                      'purchase_price': e_purchase_price,  # 매입가
-                                      'purchase_amount': e_purchase_amount,  # 보유수량
-                                      'purchase_sum': e_purchase_sum,  # 매입금액
-                                      'current_price': e_current_price,  # 현재가
-                                      'eval_sum': e_eval_sum,  # 평가금액
-                                      'earnings_rate': e_earnings_rate,  # 수익률
-                                      'valuation_sum': e_valuation_sum,  # 평가손익금액
-                                      'sign_resist_price': balance_object.sign_resist_price,
-                                      'sign_support_price': balance_object.sign_support_price,
-                                      'end_loss_price': balance_object.end_loss_price,
-                                      'end_target_price': balance_object.end_target_price,
-                                      'trading_plan': balance_object.trading_plan,
-                                      'asset_num': stock_fund_mng_info.asset_num,
-                                      'sell_plan_sum': e_sell_plan_sum,  # 매도가능금액
-                                      'sell_plan_amount': e_sell_plan_amount,  # 매도가능수량
-                                      'proc_yn': "Y",  # 처리여부
-                                      'last_chg_date': datetime.now()
-                                      }
-                        )
+                            stock_balance.objects.update_or_create(
+                                acct_no=acct_no, code=e_code, asset_num=stock_fund_mng_info.asset_num,
+                                defaults={'acct_no': acct_no,  # 계좌번호
+                                        'code': e_code,  # 종목코드
+                                        'name': e_name,  # 종목명
+                                        'purchase_price': e_purchase_price,  # 매입가
+                                        'purchase_amount': e_purchase_amount,  # 보유수량
+                                        'purchase_sum': e_purchase_sum,  # 매입금액
+                                        'current_price': e_current_price,  # 현재가
+                                        'eval_sum': e_eval_sum,  # 평가금액
+                                        'earnings_rate': e_earnings_rate,  # 수익률
+                                        'valuation_sum': e_valuation_sum,  # 평가손익금액
+                                        'sign_resist_price': balance_object.sign_resist_price,
+                                        'sign_support_price': balance_object.sign_support_price,
+                                        'end_loss_price': balance_object.end_loss_price,
+                                        'end_target_price': balance_object.end_target_price,
+                                        'trading_plan': balance_object.trading_plan,
+                                        'asset_num': stock_fund_mng_info.asset_num,
+                                        'sell_plan_sum': e_sell_plan_sum,  # 매도가능금액
+                                        'sell_plan_amount': e_sell_plan_amount,  # 매도가능수량
+                                        'proc_yn': "Y",  # 처리여부
+                                        'last_chg_date': datetime.now()
+                                        }
+                            )
+                        else:
+                            stock_balance.objects.update_or_create(
+                                acct_no=acct_no, code=e_code, asset_num=stock_fund_mng_info.asset_num,
+                                defaults={'acct_no': acct_no,  # 계좌번호
+                                        'code': e_code,  # 종목코드
+                                        'name': e_name,  # 종목명
+                                        'purchase_price': e_purchase_price,  # 매입가
+                                        'purchase_amount': e_purchase_amount,  # 보유수량
+                                        'purchase_sum': e_purchase_sum,  # 매입금액
+                                        'current_price': e_current_price,  # 현재가
+                                        'eval_sum': e_eval_sum,  # 평가금액
+                                        'earnings_rate': e_earnings_rate,  # 수익률
+                                        'valuation_sum': e_valuation_sum,  # 평가손익금액
+                                        'sign_resist_price': balance_object.sign_resist_price,
+                                        'sign_support_price': balance_object.sign_support_price,
+                                        'end_loss_price': balance_object.end_loss_price,
+                                        'end_target_price': balance_object.end_target_price,
+                                        'trading_plan': balance_object.trading_plan,
+                                        'asset_num': stock_fund_mng_info.asset_num,
+                                        'sell_plan_sum': 0,  # 매도가능금액
+                                        'sell_plan_amount': 0,  # 매도가능수량
+                                        'proc_yn': "Y",  # 처리여부
+                                        'last_chg_date': datetime.now()
+                                        }
+                            )
+
                     else:
                         stock_balance.objects.update_or_create(
                             acct_no=acct_no, code=e_code, asset_num=stock_fund_mng_info.asset_num,
                             defaults={'acct_no': acct_no,  # 계좌번호
-                                      'code': e_code,  # 종목코드
-                                      'name': e_name,  # 종목명
-                                      'purchase_price': e_purchase_price,  # 매입가
-                                      'purchase_amount': e_purchase_amount,  # 보유수량
-                                      'purchase_sum': e_purchase_sum,  # 매입금액
-                                      'current_price': e_current_price,  # 현재가
-                                      'eval_sum': e_eval_sum,  # 평가금액
-                                      'earnings_rate': e_earnings_rate,  # 수익률
-                                      'valuation_sum': e_valuation_sum,  # 평가손익금액
-                                      'sign_resist_price': balance_object.sign_resist_price,
-                                      'sign_support_price': balance_object.sign_support_price,
-                                      'end_loss_price': balance_object.end_loss_price,
-                                      'end_target_price': balance_object.end_target_price,
-                                      'trading_plan': balance_object.trading_plan,
-                                      'asset_num': stock_fund_mng_info.asset_num,
-                                      'sell_plan_sum': 0,  # 매도가능금액
-                                      'sell_plan_amount': 0,  # 매도가능수량
-                                      'proc_yn': "Y",  # 처리여부
-                                      'last_chg_date': datetime.now()
-                                      }
-                        )
+                                    'code': e_code,  # 종목코드
+                                    'name': e_name,  # 종목명
+                                    'purchase_price': e_purchase_price,  # 매입가
+                                    'purchase_amount': e_purchase_amount,  # 보유수량
+                                    'purchase_sum': e_purchase_sum,  # 매입금액
+                                    'current_price': e_current_price,  # 현재가
+                                    'eval_sum': e_eval_sum,  # 평가금액
+                                    'earnings_rate': e_earnings_rate,  # 수익률
+                                    'valuation_sum': e_valuation_sum,  # 평가손익금액
+                                    'sign_resist_price': 0,
+                                    'sign_support_price': 0,
+                                    'end_loss_price': 0,
+                                    'end_target_price': 0,
+                                    'trading_plan': 0,
+                                    'asset_num': stock_fund_mng_info.asset_num,
+                                    'sell_plan_sum': 0,  # 매도가능금액
+                                    'sell_plan_amount': 0,  # 매도가능수량
+                                    'proc_yn': "Y",  # 처리여부
+                                    'last_chg_date': datetime.now()
+                                    }
+                        )    
 
             stock_balance_rtn = stock_balance.objects.filter(acct_no=acct_no, proc_yn="Y").order_by('code')
             stock_balance_rtn_list = []
