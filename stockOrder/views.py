@@ -907,6 +907,7 @@ def minutesInfo(request):
                 cl.append(b['stck_prpr'][i])
                 vol.append(int(b['cntg_vol'][i]))
             hms = (datetime.strptime((stock_day + hms), '%Y%m%d%H%M%S') - timedelta(minutes=30)).strftime('%H%M%S')
+            time.sleep(0.5)
             #print(hms)
 
     df = pd.DataFrame((zip(date_time, op, hg, lw, cl, vol)), columns=['Date', 'Open', 'High', 'Low', 'Close', 'Volume'])

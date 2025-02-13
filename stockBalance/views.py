@@ -432,6 +432,7 @@ def marketInfo(request):
             cl.append(b['bstp_nmix_prpr'][i])
             vol.append(int(b['acml_vol'][i]))
         end = start
+        time.sleep(0.5)
 
     df = pd.DataFrame((zip(date_time, op, hg, lw, cl, vol)), columns=['날짜', '시가', '고가', '저가', '종가', '거래량'])
     # print(df)
