@@ -14,7 +14,7 @@ from django.shortcuts import render
 import os
 import glob
 import time
-from pykrx import stock
+from stockBalance.models import stock_holiday
 
 
 # Create your views here.
@@ -372,6 +372,18 @@ def get_stochastic(df, n=15, m=5, t=3):
 
     return df
 
+def get_recent_business_day():
+    today = datetime.today().strftime("%Y%m%d")
+
+    # DB에서 공휴일 목록 가져오기
+    holidays = set(stock_holiday.objects.values_list("holiday", flat=True))
+
+    while True:
+        # 토요일(5) 또는 일요일(6) 또는 공휴일이면 하루 전으로 이동
+        if datetime.strptime(today, "%Y%m%d").weekday() >= 5 or today in holidays:
+            today = (datetime.strptime(today, "%Y%m%d") - timedelta(days=1)).strftime("%Y%m%d")
+        else:
+            return today  # 최근 영업일 반환
 
 def marketInfo(request):
     app_key = request.GET.get('app_key', '')
@@ -408,7 +420,7 @@ def marketInfo(request):
         os.remove(f)          
 
     # 현재일 기준 최근 영업일
-    stock_day = stock.get_nearest_business_day_in_a_week(date=datetime.now().strftime("%Y%m%d"))
+    stock_day = get_recent_business_day()
     end = stock_day
 
     date_time = []

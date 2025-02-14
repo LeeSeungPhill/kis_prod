@@ -26,3 +26,13 @@ class stock_balance(models.Model):
 
     class Meta:
         unique_together = (('acct_no', 'code', 'asset_num'),)
+
+class stock_holiday(models.Model):
+    holiday = models.CharField(max_length=8)  
+    name = models.CharField(max_length=20, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.holiday} - {self.name}"
+    class Meta:
+        managed = False
+        db_table = 'stock_holiday'
