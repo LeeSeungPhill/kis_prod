@@ -74,6 +74,7 @@ def basic(request):
                 d_code = d['pdno'][i]
                 d_name = d['prdt_name'][i]
                 d_order_price = d['ord_unpr'][i]
+                d_avg_price = d['avg_prvs'][i]
                 d_order_amount = d['ord_qty'][i]
                 d_total_complete_qty = d['tot_ccld_qty'][i]
                 d_remain_qty = d['rmn_qty'][i]
@@ -86,12 +87,12 @@ def basic(request):
                 d_trading_type = ""
 
                 if d_order_type == '매수' or d_order_type == '매수정정' or d_order_type == '매수취소':
-                    d_buy_price = int(d_order_price)
+                    d_buy_price = int(d_order_price) if int(d_order_price) > 0 else int(d_avg_price)
                     d_buy_amount = int(d_order_amount)
                     d_trading_type = 'B'
 
                 if d_order_type == '매도' or d_order_type == '매도정정' or d_order_type == '매도취소':
-                    d_sell_price = int(d_order_price)
+                    d_sell_price = int(d_order_price) if int(d_order_price) > 0 else int(d_avg_price)
                     d_sell_amount = int(d_order_amount)
                     d_trading_type = 'S'
 
