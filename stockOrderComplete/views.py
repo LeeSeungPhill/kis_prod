@@ -87,12 +87,12 @@ def basic(request):
                 d_trading_type = ""
 
                 if d_order_type == '현금매수' or d_order_type == '매수정정*' or d_order_type == '매수취소*':
-                    d_buy_price = int(d_avg_price)
+                    d_buy_price = int(d_avg_price) if int(d_avg_price) > 0 else int(d_order_price)
                     d_buy_amount = int(d_order_amount)
                     d_trading_type = 'B'
 
                 if d_order_type == '현금매도' or d_order_type == '매도정정*' or d_order_type == '매도취소*':
-                    d_sell_price = int(d_avg_price)
+                    d_sell_price = int(d_avg_price) if int(d_avg_price) > 0 else int(d_order_price)
                     d_sell_amount = int(d_order_amount)
                     d_trading_type = 'S'
 
@@ -108,7 +108,7 @@ def basic(request):
                                                                           'org_order_no': d_org_order_no,
                                                                           'order_type': d_order_type,
                                                                           'order_dt': d_order_dt, 'order_tmd': d_order_tmd,
-                                                                          'name': d_name, 'order_price': d_avg_price,
+                                                                          'name': d_name, 'order_price': d_avg_price if int(d_avg_price) > 0 else d_order_price,
                                                                           'order_amount': d_order_amount,
                                                                           'total_complete_qty': d_total_complete_qty,
                                                                           'remain_qty': d_remain_qty,
@@ -161,7 +161,7 @@ def basic(request):
                                 stock_order_complete.objects.update_or_create(acct_no=acct_no, order_no=d_order_no, org_order_no=d_org_order_no,
                                     defaults={
                                             'acct_no': acct_no, 'order_no': d_order_no, 'org_order_no': d_org_order_no, 'order_type': d_order_type, 'order_dt': d_order_dt, 'order_tmd': d_order_tmd,
-                                            'name': d_name, 'order_price': d_order_price, 'order_amount': d_order_amount, 'total_complete_qty': d_total_complete_qty, 'remain_qty': d_remain_qty,
+                                            'name': d_name, 'order_price': d_avg_price if int(d_avg_price) > 0 else d_order_price, 'order_amount': d_order_amount, 'total_complete_qty': d_total_complete_qty, 'remain_qty': d_remain_qty,
                                             'total_complete_amt': d_total_complete_amt
                                     }
                                 )
