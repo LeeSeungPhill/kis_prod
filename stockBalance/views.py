@@ -95,7 +95,7 @@ def balanceList(request):
                     e_eval_sum = int(balance['evlu_amt'][i])
                     e_earnings_rate = balance['evlu_pfls_rt'][i]
                     e_valuation_sum = int(balance['evlu_pfls_amt'][i])
-                    e_avail_amount = int(c['ord_psbl_qty'][i])
+                    e_avail_amount = int(balance['ord_psbl_qty'][i])
 
                     balance_object = stock_balance.objects.filter(acct_no=acct_no, code=e_code).order_by('-last_chg_date').first()
 
