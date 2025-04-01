@@ -95,6 +95,7 @@ def balanceList(request):
                     e_eval_sum = int(balance['evlu_amt'][i])
                     e_earnings_rate = balance['evlu_pfls_rt'][i]
                     e_valuation_sum = int(balance['evlu_pfls_amt'][i])
+                    e_avail_amount = int(c['ord_psbl_qty'][i])
 
                     balance_object = stock_balance.objects.filter(acct_no=acct_no, code=e_code).order_by('-last_chg_date').first()
 
@@ -119,6 +120,7 @@ def balanceList(request):
                                         'purchase_price': e_purchase_price,  # 매입가
                                         'purchase_amount': e_purchase_amount,  # 보유수량
                                         'purchase_sum': e_purchase_sum,  # 매입금액
+                                        'avail_amount': e_avail_amount, # 주문가능수량
                                         'current_price': e_current_price,  # 현재가
                                         'eval_sum': e_eval_sum,  # 평가금액
                                         'earnings_rate': e_earnings_rate,  # 수익률
@@ -144,6 +146,7 @@ def balanceList(request):
                                         'purchase_price': e_purchase_price,  # 매입가
                                         'purchase_amount': e_purchase_amount,  # 보유수량
                                         'purchase_sum': e_purchase_sum,  # 매입금액
+                                        'avail_amount': e_avail_amount, # 주문가능수량
                                         'current_price': e_current_price,  # 현재가
                                         'eval_sum': e_eval_sum,  # 평가금액
                                         'earnings_rate': e_earnings_rate,  # 수익률
@@ -170,6 +173,7 @@ def balanceList(request):
                                     'purchase_price': e_purchase_price,  # 매입가
                                     'purchase_amount': e_purchase_amount,  # 보유수량
                                     'purchase_sum': e_purchase_sum,  # 매입금액
+                                    'avail_amount': e_avail_amount, # 주문가능수량
                                     'current_price': e_current_price,  # 현재가
                                     'eval_sum': e_eval_sum,  # 평가금액
                                     'earnings_rate': e_earnings_rate,  # 수익률
@@ -225,6 +229,7 @@ def balanceList(request):
                                                'purchase_price': float(round(float(rtn.purchase_price))),
                                                'purchase_amount': rtn.purchase_amount,
                                                'purchase_sum': rtn.purchase_sum,
+                                               'avail_amount': rtn.avail_amount, # 주문가능수량
                                                'current_price': rtn.current_price,
                                                'eval_sum': rtn.eval_sum,
                                                'earnings_rate': rtn.earnings_rate,

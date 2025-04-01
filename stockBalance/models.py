@@ -9,6 +9,7 @@ class stock_balance(models.Model):
     purchase_price = models.DecimalField(max_digits=9, decimal_places=2)    # 매입가
     purchase_amount = models.IntegerField()                                 # 보유수량
     purchase_sum = models.BigIntegerField()                                 # 매입금액
+    avail_amount = models.IntegerField()                                    # 주문가능수량
     current_price = models.IntegerField()                                   # 현재가
     eval_sum = models.BigIntegerField()                                     # 평가금액
     earnings_rate = models.DecimalField(max_digits=5, decimal_places=2)     # 수익률
