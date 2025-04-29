@@ -1006,10 +1006,10 @@ def stockSearch(request):
                                                'current_price': rtn.current_price,
                                                'high_price': rtn.high_price,
                                                'low_price': rtn.low_price,
-                                               'day_rate': float(rtn.day_rate),
+                                               'day_rate': float(rtn.day_rate) if rtn.day_rate != None else 0,
                                                'volumn': rtn.volumn,
-                                               'volumn_rate': float(rtn.volumn_rate),
-                                               'market_total_sum': rtn.market_total_sum})
+                                               'volumn_rate': float(rtn.volumn_rate) if rtn.volumn_rate != None else 0,
+                                               'market_total_sum': rtn.market_total_sum if rtn.market_total_sum != None else 0})
     else:
         stockSearch_info_rtn_list = []
 
@@ -1087,10 +1087,10 @@ def runStockSearch(request):
                                                'current_price': rtn.current_price,
                                                'high_price': rtn.high_price,
                                                'low_price': rtn.low_price,
-                                               'day_rate': float(rtn.day_rate),
+                                               'day_rate': float(rtn.day_rate) if rtn.day_rate != None else 0,
                                                'volumn': rtn.volumn,
-                                               'volumn_rate': float(rtn.volumn_rate),
-                                               'market_total_sum': rtn.market_total_sum})
+                                               'volumn_rate': float(rtn.volumn_rate) if rtn.volumn_rate != None else 0,
+                                               'market_total_sum': rtn.market_total_sum if rtn.market_total_sum != None else 0})
     else:
         stockSearch_info_rtn_list = []
 
