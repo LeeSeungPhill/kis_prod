@@ -84,7 +84,8 @@ def list(request):
     return JsonResponse(interest_item_rtn_list, safe=False)
 
 def update(request):
-    id = request.GET.get('id', '')
+    # id = request.GET.get('id', '')
+    code = request.GET.get('code', '')
     through_price = str(int(request.GET.get('through_price', '').replace(",", "")))
     leave_price = str(int(request.GET.get('leave_price', '').replace(",", "")))
     resist_price = str(int(request.GET.get('resist_price', '').replace(",", "")))
@@ -93,7 +94,7 @@ def update(request):
     trend_low_price = str(int(request.GET.get('trend_low_price', '').replace(",", "")))
     buy_expect_sum = str(int(request.GET.get('buy_expect_sum', '').replace(",", "")))
 
-    result = interest_item.objects.filter(id=id).update(
+    result = interest_item.objects.filter(code=code).update(
         through_price=int(through_price),
         leave_price=int(leave_price),
         resist_price=int(resist_price),

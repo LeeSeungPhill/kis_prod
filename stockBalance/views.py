@@ -255,14 +255,15 @@ def balanceList(request):
 
 
 def update(request):
-    id = request.GET.get('id', '')
+    # id = request.GET.get('id', '')
+    code = request.GET.get('code', '')
     sign_resist_price = str(int(request.GET.get('sign_resist_price', '').replace(",", "")))
     sign_support_price = str(int(request.GET.get('sign_support_price', '').replace(",", "")))
     end_target_price = str(int(request.GET.get('end_target_price', '').replace(",", "")))
     end_loss_price = str(int(request.GET.get('end_loss_price', '').replace(",", "")))
     trading_plan = request.GET.get('trading_plan', '')
 
-    result = stock_balance.objects.filter(id=id).update(
+    result = stock_balance.objects.filter(code=code).update(
         sign_resist_price=int(sign_resist_price),
         sign_support_price=int(sign_support_price),
         end_loss_price=int(end_loss_price),
