@@ -136,20 +136,20 @@ def list(request):
                 print("리스크 금액 : " + format(int(n_risk_sum), ',d'))
                 n_asset_risk_num = marketInfo + changeDate
 
-                stock_market_mng.objects.filter(acct_no=acct_no, aply_end_dt='99991231').update(aply_end_dt=changeDate)
-                stock_market_mng.objects.update_or_create(
-                    asset_risk_num=int(n_asset_risk_num), acct_no=acct_no,
-                    defaults={'asset_risk_num': int(n_asset_risk_num),  # 자산리스크번호
-                              'acct_no': acct_no,                       # 계좌번호
-                              'market_level_num': int(marketInfo),      # 시장레벨번호(1:하락 지속 후, 기술적 반등, 2:단기 추세 전환 후, 기술적 반등, 3:패턴내에서 기술적 반등, 4:일봉상 추세 전환 후, 눌림구간에서 반등, 5:상승 지속 후, 패턴내에서 기술적 반등)
-                              'total_asset': n_asset_sum,               # 총자산
-                              'risk_rate': n_risk_rate,                 # 리스크(%)
-                              'risk_sum': n_risk_sum,                   # 리스크 금액(총자산 * 리스크)
-                              'item_number': n_stock_num,               # 종목수
-                              'aply_start_dt': changeDate,
-                              'aply_end_dt': "99991231"
-                              }
-                )
+                # stock_market_mng.objects.filter(acct_no=acct_no, aply_end_dt='99991231').update(aply_end_dt=changeDate)
+                # stock_market_mng.objects.update_or_create(
+                #     asset_risk_num=int(n_asset_risk_num), acct_no=acct_no,
+                #     defaults={'asset_risk_num': int(n_asset_risk_num),  # 자산리스크번호
+                #               'acct_no': acct_no,                       # 계좌번호
+                #               'market_level_num': int(marketInfo),      # 시장레벨번호(1:하락 지속 후, 기술적 반등, 2:단기 추세 전환 후, 기술적 반등, 3:패턴내에서 기술적 반등, 4:일봉상 추세 전환 후, 눌림구간에서 반등, 5:상승 지속 후, 패턴내에서 기술적 반등)
+                #               'total_asset': n_asset_sum,               # 총자산
+                #               'risk_rate': n_risk_rate,                 # 리스크(%)
+                #               'risk_sum': n_risk_sum,                   # 리스크 금액(총자산 * 리스크)
+                #               'item_number': n_stock_num,               # 종목수
+                #               'aply_start_dt': changeDate,
+                #               'aply_end_dt': "99991231"
+                #               }
+                # )
         except Exception as e:
             print('잘못된 인덱스입니다.', e)
     elif stock_market_mng.objects.filter(acct_no=acct_no, aply_end_dt='99991231').count() > 0:
@@ -267,7 +267,7 @@ def list(request):
                 n_risk_sum = n_asset_sum * n_risk_rate * 0.01
                 print("리스크 금액 : " + format(int(n_risk_sum), ',d'))
 
-                stock_market_mng.objects.filter(acct_no=acct_no, asset_risk_num=asset_risk_info.asset_risk_num, aply_end_dt='99991231').update(total_asset=n_asset_sum, risk_rate=n_risk_rate, risk_sum=n_risk_sum, item_number=n_stock_num)
+                # stock_market_mng.objects.filter(acct_no=acct_no, asset_risk_num=asset_risk_info.asset_risk_num, aply_end_dt='99991231').update(total_asset=n_asset_sum, risk_rate=n_risk_rate, risk_sum=n_risk_sum, item_number=n_stock_num)
         except Exception as e:
             print('잘못된 인덱스입니다.', e)
 
