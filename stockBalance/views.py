@@ -216,7 +216,9 @@ def balanceList(request):
                 if rtn.end_loss_price == None:
                     rtn.end_loss_price = "0"
                 if rtn.limit_price == None:
-                    rtn.limit_price = "0"    
+                    rtn.limit_price = "0"
+                if rtn.limit_amt == None:
+                    rtn.limit_amt = "0"         
 
                 if int(rtn.current_price) > int(rtn.sign_resist_price):
                     rtn.K_sign_resist_price = "1"
@@ -256,8 +258,9 @@ def balanceList(request):
                                                'sell_plan_amount': rtn.sell_plan_amount,
                                                'prdy_vol_rate': prdy_vol_rate,
                                                'total_market_value': total_market_value,
-                                               'limit_price': rtn.limit_price,
-                                               'limit_amt': rtn.limit_amt, 'D_limit_price': rtn.D_limit_price,
+                                               'limit_price': rtn.limit_price, 
+                                               'D_limit_price': rtn.D_limit_price,
+                                               'limit_amt': rtn.limit_amt, 
                                                'last_chg_date': rtn.last_chg_date})
         else:
             stock_balance_rtn_list = []
