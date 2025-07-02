@@ -205,6 +205,7 @@ def balanceList(request):
                 rtn.D_sign_support_price = ""
                 rtn.K_target_price = ""
                 rtn.D_loss_price = ""
+                rtn.D_limit_price = ""
 
                 if rtn.sign_resist_price == None:
                     rtn.sign_resist_price = "0"
@@ -214,6 +215,8 @@ def balanceList(request):
                    rtn.end_target_price = "0"
                 if rtn.end_loss_price == None:
                     rtn.end_loss_price = "0"
+                if rtn.limit_price == None:
+                    rtn.limit_price = "0"    
 
                 if int(rtn.current_price) > int(rtn.sign_resist_price):
                     rtn.K_sign_resist_price = "1"
@@ -223,6 +226,8 @@ def balanceList(request):
                     rtn.K_target_price = "1"
                 if int(rtn.current_price) < int(rtn.end_loss_price):
                     rtn.D_loss_price = "1"
+                if int(rtn.current_price) < int(rtn.limit_price):
+                    rtn.D_limit_price = "1"    
 
                 a = inquire_price(access_token, app_key, app_secret, rtn.code)
 
@@ -252,7 +257,7 @@ def balanceList(request):
                                                'prdy_vol_rate': prdy_vol_rate,
                                                'total_market_value': total_market_value,
                                                'limit_price': rtn.limit_price,
-                                               'limit_amt': rtn.limit_amt,
+                                               'limit_amt': rtn.limit_amt, 'D_limit_price': rtn.D_limit_price,
                                                'last_chg_date': rtn.last_chg_date})
         else:
             stock_balance_rtn_list = []
