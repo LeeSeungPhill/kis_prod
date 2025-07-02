@@ -24,6 +24,8 @@ class stock_balance(models.Model):
     sell_plan_amount = models.IntegerField(null=True, blank=True)           # 매도가능수량
     proc_yn = models.CharField(max_length=1, null=True)                     # 처리여부
     last_chg_date = models.DateTimeField(auto_now=True)	                    # 최종 변경일시
+    limit_price = models.IntegerField(null=True, blank=True)                # 손절가
+    limit_amt = models.IntegerField(null=True, blank=True)                  # 손실금액
 
     class Meta:
         unique_together = (('acct_no', 'code', 'asset_num'),)

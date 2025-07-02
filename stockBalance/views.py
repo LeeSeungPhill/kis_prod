@@ -133,6 +133,8 @@ def balanceList(request):
                                         'asset_num': stock_fund_mng_info.asset_num,
                                         'sell_plan_sum': e_sell_plan_sum,  # 매도가능금액
                                         'sell_plan_amount': e_sell_plan_amount,  # 매도가능수량
+                                        'limit_price': balance_object.limit_price,  # 손절가
+                                        'limit_amt': balance_object.limit_amt,  # 손실금액
                                         'proc_yn': "Y",  # 처리여부
                                         'last_chg_date': datetime.now()
                                         }
@@ -159,6 +161,8 @@ def balanceList(request):
                                         'asset_num': stock_fund_mng_info.asset_num,
                                         'sell_plan_sum': 0,  # 매도가능금액
                                         'sell_plan_amount': 0,  # 매도가능수량
+                                        'limit_price': balance_object.limit_price,  # 손절가
+                                        'limit_amt': balance_object.limit_amt,  # 손실금액
                                         'proc_yn': "Y",  # 처리여부
                                         'last_chg_date': datetime.now()
                                         }
@@ -186,6 +190,8 @@ def balanceList(request):
                                     'asset_num': stock_fund_mng_info.asset_num,
                                     'sell_plan_sum': 0,  # 매도가능금액
                                     'sell_plan_amount': 0,  # 매도가능수량
+                                    'limit_price': balance_object.limit_price,  # 손절가
+                                    'limit_amt': balance_object.limit_amt,  # 손실금액
                                     'proc_yn': "Y",  # 처리여부
                                     'last_chg_date': datetime.now()
                                     }
@@ -245,6 +251,8 @@ def balanceList(request):
                                                'sell_plan_amount': rtn.sell_plan_amount,
                                                'prdy_vol_rate': prdy_vol_rate,
                                                'total_market_value': total_market_value,
+                                               'limit_price': rtn.limit_price,
+                                               'limit_amt': rtn.limit_amt,
                                                'last_chg_date': rtn.last_chg_date})
         else:
             stock_balance_rtn_list = []
@@ -262,6 +270,7 @@ def update(request):
     end_target_price = str(int(request.GET.get('end_target_price', '').replace(",", "")))
     end_loss_price = str(int(request.GET.get('end_loss_price', '').replace(",", "")))
     trading_plan = request.GET.get('trading_plan', '')
+    limit_amt = str(int(request.GET.get('limit_amt', '').replace(",", "")))
 
     result = stock_balance.objects.filter(code=code).update(
         sign_resist_price=int(sign_resist_price),
@@ -269,6 +278,7 @@ def update(request):
         end_loss_price=int(end_loss_price),
         end_target_price=int(end_target_price),
         trading_plan=trading_plan,
+        limit_amt=int(limit_amt),
         last_chg_date=datetime.now()
     )
 
