@@ -242,7 +242,7 @@ def balanceList(request):
                                                'purchase_price': float(round(float(rtn.purchase_price))),
                                                'purchase_amount': rtn.purchase_amount,
                                                'purchase_sum': rtn.purchase_sum,
-                                               'avail_amount': rtn.avail_amount, # 주문가능수량
+                                               'avail_amount': rtn.avail_amount if rtn.avail_amount != None else "0", # 주문가능수량
                                                'current_price': rtn.current_price,
                                                'eval_sum': rtn.eval_sum,
                                                'earnings_rate': rtn.earnings_rate,
@@ -253,9 +253,9 @@ def balanceList(request):
                                                'K_target_price': rtn.K_target_price, 'D_loss_price': rtn.D_loss_price,
                                                'end_loss_price': rtn.end_loss_price,
                                                'end_target_price': rtn.end_target_price,
-                                               'trading_plan': rtn.trading_plan, 'asset_num': rtn.asset_num,
-                                               'sell_plan_sum': rtn.sell_plan_sum,
-                                               'sell_plan_amount': rtn.sell_plan_amount,
+                                               'trading_plan': rtn.trading_plan if rtn.trading_plan != None else "", 'asset_num': rtn.asset_num,
+                                               'sell_plan_sum': rtn.sell_plan_sum if rtn.sell_plan_sum != None else "0",
+                                               'sell_plan_amount': rtn.sell_plan_amount if rtn.sell_plan_amount != None else "0",
                                                'prdy_vol_rate': prdy_vol_rate,
                                                'total_market_value': total_market_value,
                                                'limit_price': rtn.limit_price, 
