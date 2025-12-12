@@ -8,10 +8,33 @@ import requests
 import pandas as pd
 
 # Create your views here.
+#URL_BASE = "https://openapivts.koreainvestment.com:29443"   # 모의투자서비스
+URL_BASE = "https://openapi.koreainvestment.com:9443"       # 실전서비스
+
+# 매수 가능(현금) 조회
+def inquire_psbl_order(access_token, app_key, app_secret, acct_no):
+    headers = {"Content-Type": "application/json",
+               "authorization": f"Bearer {access_token}",
+               "appKey": app_key,
+               "appSecret": app_secret,
+               "tr_id": "TTTC8908R"}    # tr_id : TTTC8908R[실전투자], VTTC8908R[모의투자]
+    params = {
+               "CANO": acct_no,
+               "ACNT_PRDT_CD": "01",
+               "PDNO": "",                     # 종목번호(6자리)
+               "ORD_UNPR": "0",                # 1주당 가격
+               "ORD_DVSN": "02",               # 02 : 조건부지정가
+               "CMA_EVLU_AMT_ICLD_YN": "Y",    # CMA평가금액포함여부
+               "OVRS_ICLD_YN": "N"             # 해외포함여부
+    }
+    PATH = "uapi/domestic-stock/v1/trading/inquire-psbl-order"
+    URL = f"{URL_BASE}/{PATH}"
+    res = requests.get(URL, headers=headers, params=params, verify=False)
+    ar = resp.APIResp(res)
+
+    return ar.getBody().output['nrcvb_buy_amt']
 
 def list(request):
-    #URL_BASE = "https://openapivts.koreainvestment.com:29443"   # 모의투자서비스
-    URL_BASE = "https://openapi.koreainvestment.com:9443"       # 실전서비스
     acct_no = request.GET.get('acct_no', '')
     app_key = request.GET.get('app_key', '')
     app_secret = request.GET.get('app_secret', '')
@@ -112,6 +135,11 @@ def list(request):
         except Exception as e:
             print('잘못된 인덱스입니다.', e)
 
+
+        # 매수 가능(현금) 조회
+        b = inquire_psbl_order(access_token, app_key, app_secret, acct_no)
+        print("매수 가능(현금) : " + format(int(b), ',d'));
+
         stock_fund_mng_rtn = stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).order_by('-last_chg_date')
         stock_fund_mng_rtn_list = []
 
@@ -124,7 +152,7 @@ def list(request):
                 {'asset_num': rtn.asset_num, 'acct_no': rtn.acct_no, 'cash_rate': rtn.cash_rate, 'tot_evlu_amt': rtn.tot_evlu_amt,
                  'cash_rate_amt': rtn.cash_rate_amt, 'dnca_tot_amt': rtn.dnca_tot_amt, 'prvs_rcdl_excc_amt': rtn.prvs_rcdl_excc_amt,
                  'nass_amt': rtn.nass_amt, 'scts_evlu_amt': rtn.scts_evlu_amt, 'asset_icdc_amt': rtn.asset_icdc_amt,
-                 'sell_plan_amt': rtn.sell_plan_amt, 'buy_plan_amt': rtn.buy_plan_amt, 'market_ratio': rtn.market_ratio, 'last_chg_date': rtn.last_chg_date})
+                 'sell_plan_amt': rtn.sell_plan_amt, 'buy_plan_amt': rtn.buy_plan_amt, 'market_ratio': rtn.market_ratio, 'last_chg_date': rtn.last_chg_date, 'buy_psbl_amt':int(b)})
 
     else:
         stock_fund_mng_rtn_list = []
