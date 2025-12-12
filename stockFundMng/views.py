@@ -11,6 +11,45 @@ import pandas as pd
 #URL_BASE = "https://openapivts.koreainvestment.com:29443"   # 모의투자서비스
 URL_BASE = "https://openapi.koreainvestment.com:9443"       # 실전서비스
 
+# 기간별매매손익현황 합산조회
+def inquire_period_trade_profit_sum(access_token, app_key, app_secret, acct_no, strt_dt, end_dt):
+
+    headers = {"Content-Type": "application/json",
+               "authorization": f"Bearer {access_token}",
+               "appKey": app_key,
+               "appSecret": app_secret,
+               "tr_id": "TTTC8715R",
+               "custtype": "P"}
+    params = {
+            'CANO': acct_no,            # 종합계좌번호
+            'SORT_DVSN': "01",          # 00: 최근 순, 01: 과거 순, 02: 최근 순
+            'ACNT_PRDT_CD': "01",
+            'CBLC_DVSN': "00",
+            'PDNO': "",                 # ""공란입력 시, 전체
+            'INQR_STRT_DT': strt_dt,    # 조회시작일(8자리) 
+            'INQR_END_DT': end_dt,      # 조회종료일(8자리)
+            'CTX_AREA_NK100': "",
+            'CTX_AREA_FK100': "" 
+    }
+    PATH = "uapi/domestic-stock/v1/trading/inquire-period-trade-profit"
+    URL = f"{URL_BASE}/{PATH}"
+
+    try:
+        res = requests.get(URL, headers=headers, params=params, verify=False)
+        ar = resp.APIResp(res)
+
+        # 응답에 output2이 있는지 확인
+        body = ar.getBody()
+        if hasattr(body, 'output2'):
+            return body.output2['tot_rlzt_pfls']
+        else:
+            print("기간별매매손익현황 합산조회 응답이 없습니다.")
+            return []  # 혹은 None
+
+    except Exception as e:
+        print("기간별매매손익현황 합산조회 중 오류 발생:", e)
+        return []
+
 # 매수 가능(현금) 조회
 def inquire_psbl_order(access_token, app_key, app_secret, acct_no):
     headers = {"Content-Type": "application/json",
@@ -135,10 +174,13 @@ def list(request):
         except Exception as e:
             print('잘못된 인덱스입니다.', e)
 
+        # 총실현손익
+        result1 = inquire_period_trade_profit_sum(access_token, app_key, app_secret, acct_no, datetime.now().strftime("%Y%m%d"), datetime.now().strftime("%Y%m%d"))
+        print("총실현손익 : " + format(int(result1), ',d'));
 
         # 매수 가능(현금) 조회
-        b = inquire_psbl_order(access_token, app_key, app_secret, acct_no)
-        print("매수 가능(현금) : " + format(int(b), ',d'));
+        result2 = inquire_psbl_order(access_token, app_key, app_secret, acct_no)
+        print("매수 가능(현금) : " + format(int(result2), ',d'));
 
         stock_fund_mng_rtn = stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).order_by('-last_chg_date')
         stock_fund_mng_rtn_list = []
@@ -153,7 +195,7 @@ def list(request):
                  'cash_rate_amt': rtn.cash_rate_amt, 'dnca_tot_amt': rtn.dnca_tot_amt, 'prvs_rcdl_excc_amt': rtn.prvs_rcdl_excc_amt,
                  'nass_amt': rtn.nass_amt, 'scts_evlu_amt': rtn.scts_evlu_amt, 'asset_icdc_amt': rtn.asset_icdc_amt,
                  'sell_plan_amt': rtn.sell_plan_amt, 'buy_plan_amt': rtn.buy_plan_amt, 'market_ratio': rtn.market_ratio, 'last_chg_date': rtn.last_chg_date, 
-                 'buy_prog_amt': rtn.prvs_rcdl_excc_amt-int(b), 'buy_psbl_amt':int(b)})
+                 'total_profit_loss_amt': int(result1), 'buy_psbl_amt':int(result2)})
 
     else:
         stock_fund_mng_rtn_list = []
