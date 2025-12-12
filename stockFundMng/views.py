@@ -152,7 +152,8 @@ def list(request):
                 {'asset_num': rtn.asset_num, 'acct_no': rtn.acct_no, 'cash_rate': rtn.cash_rate, 'tot_evlu_amt': rtn.tot_evlu_amt,
                  'cash_rate_amt': rtn.cash_rate_amt, 'dnca_tot_amt': rtn.dnca_tot_amt, 'prvs_rcdl_excc_amt': rtn.prvs_rcdl_excc_amt,
                  'nass_amt': rtn.nass_amt, 'scts_evlu_amt': rtn.scts_evlu_amt, 'asset_icdc_amt': rtn.asset_icdc_amt,
-                 'sell_plan_amt': rtn.sell_plan_amt, 'buy_plan_amt': rtn.buy_plan_amt, 'market_ratio': rtn.market_ratio, 'last_chg_date': rtn.last_chg_date, 'buy_psbl_amt':int(b)})
+                 'sell_plan_amt': rtn.sell_plan_amt, 'buy_plan_amt': rtn.buy_plan_amt, 'market_ratio': rtn.market_ratio, 'last_chg_date': rtn.last_chg_date, 
+                 'buy_prog_amt': rtn.prvs_rcdl_excc_amt-int(b), 'buy_psbl_amt':int(b)})
 
     else:
         stock_fund_mng_rtn_list = []
