@@ -135,6 +135,7 @@ def balanceList(request):
                                         'sell_plan_amount': e_sell_plan_amount,  # 매도가능수량
                                         'limit_price': balance_object.limit_price,  # 손절가
                                         'limit_amt': balance_object.limit_amt,  # 손실금액
+                                        'safe_margin_sum': balance_object.safe_margin_sum,  # 안전마진금액
                                         'proc_yn': "Y",  # 처리여부
                                         'last_chg_date': datetime.now()
                                         }
@@ -163,6 +164,7 @@ def balanceList(request):
                                         'sell_plan_amount': 0,  # 매도가능수량
                                         'limit_price': balance_object.limit_price,  # 손절가
                                         'limit_amt': balance_object.limit_amt,  # 손실금액
+                                        'safe_margin_sum': balance_object.safe_margin_sum,  # 안전마진금액
                                         'proc_yn': "Y",  # 처리여부
                                         'last_chg_date': datetime.now()
                                         }
@@ -192,6 +194,7 @@ def balanceList(request):
                                     'sell_plan_amount': 0,  # 매도가능수량
                                     'limit_price': balance_object.limit_price,  # 손절가
                                     'limit_amt': balance_object.limit_amt,  # 손실금액
+                                    'safe_margin_sum': balance_object.safe_margin_sum,  # 안전마진금액
                                     'proc_yn': "Y",  # 처리여부
                                     'last_chg_date': datetime.now()
                                     }
@@ -218,7 +221,9 @@ def balanceList(request):
                 if rtn.limit_price == None:
                     rtn.limit_price = "0"
                 if rtn.limit_amt == None:
-                    rtn.limit_amt = "0"         
+                    rtn.limit_amt = "0"  
+                if rtn.safe_margin_sum == None:
+                    rtn.safe_margin_sum = "0"                           
 
                 if int(rtn.current_price) > int(rtn.sign_resist_price):
                     rtn.K_sign_resist_price = "1"
@@ -261,6 +266,7 @@ def balanceList(request):
                                                'limit_price': rtn.limit_price, 
                                                'D_limit_price': rtn.D_limit_price,
                                                'limit_amt': rtn.limit_amt, 
+                                               'safe_margin_sum': rtn.safe_margin_sum, 
                                                'last_chg_date': rtn.last_chg_date})
         else:
             stock_balance_rtn_list = []

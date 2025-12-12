@@ -26,6 +26,7 @@ class stock_balance(models.Model):
     last_chg_date = models.DateTimeField(auto_now=True)	                    # 최종 변경일시
     limit_price = models.IntegerField(null=True, blank=True)                # 손절가
     limit_amt = models.IntegerField(null=True, blank=True)                  # 손실금액
+    safe_margin_sum = models.IntegerField(null=True, blank=True)                  # 안전마진금액
 
     class Meta:
         unique_together = (('acct_no', 'code', 'asset_num'),)
