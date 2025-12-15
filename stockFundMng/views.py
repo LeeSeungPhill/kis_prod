@@ -81,18 +81,28 @@ def list(request):
     assetInfo = request.GET.get('market_change', '')    # market_change=d : 하락, market_change=u : 상승
 
     # assetInfo 값 존재시, 자산 관리 정보 신규 생성
-    if assetInfo != '':
-        n_asset_date = DateFormat(datetime.now()).format('Ymd')
-        if assetInfo == "d":
-            n_cash_rate = 70  # 하락 추세
-        elif assetInfo == "u":
-            n_cash_rate = 30  # 상승 추세
-        else:
-            n_cash_rate = 50  # 패턴 움직임
-        n_asset_num = str(n_cash_rate) + n_asset_date
+    # if assetInfo != '':
+    #     n_asset_date = DateFormat(datetime.now()).format('Ymd')
+    #     if assetInfo == "d":
+    #         n_cash_rate = 70  # 하락 추세
+    #     elif assetInfo == "u":
+    #         n_cash_rate = 30  # 상승 추세
+    #     else:
+    #         n_cash_rate = 50  # 패턴 움직임
+    #     n_asset_num = str(n_cash_rate) + n_asset_date
 
-        s1 = stock_fund_mng.objects.create(asset_num=int(n_asset_num), acct_no=acct_no, cash_rate=n_cash_rate)
-        s1.save()
+    #     s1 = stock_fund_mng.objects.create(asset_num=int(n_asset_num), acct_no=acct_no, cash_rate=n_cash_rate)
+    #     s1.save()
+
+    if acct_no != '':
+        # acct_no 의 자산 관리 정보(stock_fund_mng) 미존재시, 자산 관리 정보(stock_fund_mng) 신규 생성
+        if stock_fund_mng.objects.filter(acct_no=acct_no).count() < 1:
+            n_asset_date = DateFormat(datetime.now()).format('Ymd')
+            n_cash_rate = 50  # 패턴 움직임
+            n_asset_num = str(n_cash_rate) + n_asset_date
+
+            s1 = stock_fund_mng.objects.create(asset_num=int(n_asset_num), acct_no=acct_no, cash_rate=n_cash_rate)
+            s1.save()
 
     if stock_fund_mng.objects.filter(acct_no=acct_no).count() > 0:
         stock_fund_mng_info = stock_fund_mng.objects.filter(acct_no=acct_no).order_by('-last_chg_date').first()
@@ -136,40 +146,50 @@ def list(request):
                     u_scts_evlu_amt = int(f['scts_evlu_amt'][i])            # 유저 평가 금액
                     u_asst_icdc_amt = int(f['asst_icdc_amt'][i])            # 자산 증감액
 
-                if assetInfo != '':
-                    u_cash_rate_amt = round(u_tot_evlu_amt * stock_fund_mng_info.cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
-                    print("총평가금액 기준 현금비중금액 : " + format(int(u_cash_rate_amt), ',d'))
+                # if assetInfo != '':
+                #     u_cash_rate_amt = round(u_tot_evlu_amt * stock_fund_mng_info.cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
+                #     print("총평가금액 기준 현금비중금액 : " + format(int(u_cash_rate_amt), ',d'))
 
-                    u_sell_plan_amt = u_cash_rate_amt - u_prvs_rcdl_excc_amt  # 매도예정자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
-                    if u_sell_plan_amt < 0:
-                        u_sell_plan_amt = 0
+                #     u_sell_plan_amt = u_cash_rate_amt - u_prvs_rcdl_excc_amt  # 매도예정자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
+                #     if u_sell_plan_amt < 0:
+                #         u_sell_plan_amt = 0
 
-                    u_buy_plan_amt = u_prvs_rcdl_excc_amt - u_cash_rate_amt   # 매수예정자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
-                    if u_buy_plan_amt < 0:
-                        u_buy_plan_amt = 0
+                #     u_buy_plan_amt = u_prvs_rcdl_excc_amt - u_cash_rate_amt   # 매수예정자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
+                #     if u_buy_plan_amt < 0:
+                #         u_buy_plan_amt = 0
 
-                    stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).update(
-                        tot_evlu_amt=u_tot_evlu_amt,                # 총평가금액
-                        dnca_tot_amt=u_dnca_tot_amt,                # 예수금 총금액
-                        prvs_rcdl_excc_amt=u_prvs_rcdl_excc_amt,    # 가수도 정산금액
-                        nass_amt=u_nass_amt,                        # 순자산금액(세금비용 제외)
-                        scts_evlu_amt = u_scts_evlu_amt,            # 유저평가금액
-                        asset_icdc_amt = u_asst_icdc_amt,           # 자산증감액
-                        cash_rate_amt = u_cash_rate_amt,            # 총평가금액 기준 현금 비중 금액
-                        sell_plan_amt = u_sell_plan_amt,            # 매도 예정 자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
-                        buy_plan_amt = u_buy_plan_amt,               # 매수 예정 자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
-                        last_chg_date = datetime.now()
-                    )
-                else:
-                    stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).update(
-                        tot_evlu_amt=u_tot_evlu_amt,  # 총평가금액
-                        dnca_tot_amt=u_dnca_tot_amt,  # 예수금 총금액
-                        prvs_rcdl_excc_amt=u_prvs_rcdl_excc_amt,  # 가수도 정산금액
-                        nass_amt=u_nass_amt,  # 순자산금액(세금비용 제외)
-                        scts_evlu_amt=u_scts_evlu_amt,  # 유저평가금액
-                        asset_icdc_amt=u_asst_icdc_amt,  # 자산증감액
-                        last_chg_date=datetime.now()
-                    )
+                #     stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).update(
+                #         tot_evlu_amt=u_tot_evlu_amt,                # 총평가금액
+                #         dnca_tot_amt=u_dnca_tot_amt,                # 예수금 총금액
+                #         prvs_rcdl_excc_amt=u_prvs_rcdl_excc_amt,    # 가수도 정산금액
+                #         nass_amt=u_nass_amt,                        # 순자산금액(세금비용 제외)
+                #         scts_evlu_amt = u_scts_evlu_amt,            # 유저평가금액
+                #         asset_icdc_amt = u_asst_icdc_amt,           # 자산증감액
+                #         cash_rate_amt = u_cash_rate_amt,            # 총평가금액 기준 현금 비중 금액
+                #         sell_plan_amt = u_sell_plan_amt,            # 매도 예정 자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
+                #         buy_plan_amt = u_buy_plan_amt,               # 매수 예정 자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
+                #         last_chg_date = datetime.now()
+                #     )
+                # else:
+                #     stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).update(
+                #         tot_evlu_amt=u_tot_evlu_amt,  # 총평가금액
+                #         dnca_tot_amt=u_dnca_tot_amt,  # 예수금 총금액
+                #         prvs_rcdl_excc_amt=u_prvs_rcdl_excc_amt,  # 가수도 정산금액
+                #         nass_amt=u_nass_amt,  # 순자산금액(세금비용 제외)
+                #         scts_evlu_amt=u_scts_evlu_amt,  # 유저평가금액
+                #         asset_icdc_amt=u_asst_icdc_amt,  # 자산증감액
+                #         last_chg_date=datetime.now()
+                #     )
+
+                stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).update(
+                    tot_evlu_amt=u_tot_evlu_amt,  # 총평가금액
+                    dnca_tot_amt=u_dnca_tot_amt,  # 예수금 총금액
+                    prvs_rcdl_excc_amt=u_prvs_rcdl_excc_amt,  # 가수도 정산금액
+                    nass_amt=u_nass_amt,  # 순자산금액(세금비용 제외)
+                    scts_evlu_amt=u_scts_evlu_amt,  # 유저평가금액
+                    asset_icdc_amt=u_asst_icdc_amt,  # 자산증감액
+                    last_chg_date=datetime.now()
+                )
 
         except Exception as e:
             print('잘못된 인덱스입니다.', e)
