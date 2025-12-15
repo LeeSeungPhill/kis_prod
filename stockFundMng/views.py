@@ -101,7 +101,7 @@ def list(request):
             n_cash_rate = 50  # 패턴 움직임
             n_asset_num = str(n_cash_rate) + n_asset_date
 
-            s1 = stock_fund_mng.objects.create(asset_num=int(n_asset_num), acct_no=acct_no, cash_rate=n_cash_rate, sell_plan_amt=0, buy_plan_amt=0)
+            s1 = stock_fund_mng.objects.create(asset_num=int(n_asset_num), acct_no=acct_no, cash_rate=n_cash_rate, market_ratio=n_cash_rate)
             s1.save()
 
     if stock_fund_mng.objects.filter(acct_no=acct_no).count() > 0:
@@ -182,6 +182,13 @@ def list(request):
                 #     )
                 
                 u_cash_rate_amt = round(u_tot_evlu_amt * stock_fund_mng_info.cash_rate * 0.01, 0)  # 총평가금액 기준 현금 비중 금액
+                u_sell_plan_amt = u_cash_rate_amt - u_prvs_rcdl_excc_amt  # 매도예정자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
+                if u_sell_plan_amt < 0:
+                    u_sell_plan_amt = 0
+
+                u_buy_plan_amt = u_prvs_rcdl_excc_amt - u_cash_rate_amt   # 매수예정자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
+                if u_buy_plan_amt < 0:
+                    u_buy_plan_amt = 0
                 
                 stock_fund_mng.objects.filter(acct_no=acct_no, asset_num=stock_fund_mng_info.asset_num).update(
                     tot_evlu_amt=u_tot_evlu_amt,                # 총평가금액
@@ -191,6 +198,8 @@ def list(request):
                     scts_evlu_amt=u_scts_evlu_amt,              # 유저평가금액
                     asset_icdc_amt=u_asst_icdc_amt,             # 자산증감액
                     cash_rate_amt = u_cash_rate_amt,            # 총평가금액 기준 현금 비중 금액
+                    sell_plan_amt = u_sell_plan_amt,            # 매도 예정 자금(총평가금액 기준 현금비중금액 - 가수도 정산금액)
+                    buy_plan_amt = u_buy_plan_amt,               # 매수 예정 자금(가수도 정산금액 - 총평가금액 기준 현금비중금액)
                     last_chg_date=datetime.now()
                 )
 
