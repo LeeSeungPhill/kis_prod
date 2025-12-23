@@ -29,23 +29,25 @@ def basic(request):
                    "authorization": f"Bearer {access_token}",
                    "appKey": app_key,
                    "appSecret": app_secret,
-                   "tr_id": "TTTC8001R"}    # tr_id : TTTC8001R[실전투자], VTTC8001R[모의투자]
+                   "tr_id": "TTTC0081R",                        # (3개월이내) TTTC0081R, (3개월이전) CTSC9215R
+                   "custtype": "P"}    
         params = {
             "CANO": acct_no,
             "ACNT_PRDT_CD": '01',
+            'SORT_DVSN': "01",                                  # 00: 최근 순, 01: 과거 순, 02: 최근 순
             "INQR_STRT_DT": datetime.now().strftime('%Y%m%d'),
             "INQR_END_DT": datetime.now().strftime('%Y%m%d'),
-            "SLL_BUY_DVSN_CD": '00',
-            "INQR_DVSN": '00',
-            "PDNO": "",
-            "CCLD_DVSN": "00",
-            "ORD_GNO_BRNO": "",
-            "ODNO": "",
-            "INQR_DVSN_3": "00",
-            "INQR_DVSN_1": "",
-            "INQR_DVSN_2": "",
-            "CTX_AREA_FK100": "",
-            "CTX_AREA_NK100": ""
+            'SLL_BUY_DVSN_CD': "00",                            # 매도매수구분코드 00 : 전체 / 01 : 매도 / 02 : 매수
+            'PDNO': "",                                         # 종목번호(6자리) ""공란입력 시, 전체
+            'ORD_GNO_BRNO': "",                                 # 주문채번지점번호 ""공란입력 시, 전체
+            'ODNO': "",                                         # 주문번호 ""공란입력 시, 전체
+            'CCLD_DVSN': "00",                                  # 체결구분 00 전체, 01 체결, 02 미체결
+            'INQR_DVSN': "01",                                  # 조회구분 00 역순, 01 정순
+            'INQR_DVSN_1': "",                                  # 조회구분1 없음: 전체, 1: ELW, 2: 프리보드
+            'INQR_DVSN_3': "00",                                # 조회구분3 00 전체, 01 현금, 02 신용, 03 담보, 04 대주, 05 대여, 06 자기융자신규/상환, 07 유통융자신규/상환
+            'EXCG_ID_DVSN_CD': "ALL",                           # 거래소ID구분코드 KRX : KRX, NXT : NXT, SOR (Smart Order Routing) : SOR, ALL : 전체
+            'CTX_AREA_NK100': "",
+            'CTX_AREA_FK100': "" 
         }
         PATH = "uapi/domestic-stock/v1/trading/inquire-daily-ccld"
         URL = f"{URL_BASE}/{PATH}"
